@@ -1,0 +1,30 @@
+#!/bin/sh
+#SBATCH --job-name=extract_wikipedia
+#SBATCH --array=0-0
+#SBATCH --partition=shared
+#SBATCH --mem=80G
+#SBATCH -t 0-72:00
+#SBATCH -c 1
+#SBATCH --output=/n/home04/rrinberg/catered_out/data_unlearning/extract_wiki-%A__%a.out
+#SBATCH --mail-user=royrinberg@gmail.com  
+#SBATCH --mail-type=ALL
+#SBATCH --account vadhan_lab
+
+### vadhan_lab
+
+module load python/3.10.12-fasrc01
+module load intelpython/3.9.16-fasrc01
+#module load cuda cudnn
+
+mamba activate unlearning_3.10
+
+
+## logging
+DATA_DIR=/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia
+CODE_DIR=/n/home04/rrinberg/code/wiki-rag
+
+
+## Run the experiment
+cd $DATA_DIR
+
+wikiextractor --json enwiki-latest-pages-articles.xml.bz2 

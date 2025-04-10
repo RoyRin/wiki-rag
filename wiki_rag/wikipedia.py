@@ -1,14 +1,11 @@
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from langchain.vectorstores import FAISS
-from langchain.docstore.document import Document
-from langchain.embeddings.base import Embeddings
 from typing import List
 import numpy as np
 from pathlib import Path 
 import json
 import os
-
+import glob
+from xml.etree import ElementTree as ET
 
 default_cache_dir = Path('/n/netscratch/vadhan_lab/Lab/rrinberg/HF_cache')
 data_cache= Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia")
@@ -118,3 +115,25 @@ def get_article_remote(title, abstract_only = False ):
     page = wikipedia.page(title)
     content = page.content
     return content
+
+
+def parse_wikiextractor_output(extracted_dir):
+    for file_path in glob.glob(os.path.join(extracted_dir, '**', 'wiki_*'), recursive=True):
+        with open(file_path, 'r', encoding='utf-8') as f:
+            contents = f.read()
+            docs = contents.split('</doc>')
+            for doc in docs:
+                doc = doc.strip()
+                if not doc:
+                    continue
+                try:
+                    doc += '</doc>'  # Add closing tag back
+                    xml_doc = ET.fromstring(doc)
+                    yield {
+                        'id': xml_doc.attrib['id'],
+                        'title': xml_doc.attrib['title'],
+                        'url': xml_doc.attrib['url'],
+                        'text': xml_doc.text.strip() if xml_doc.text else ''
+                    }
+                except Exception as e:
+                    print(f"Skipping malformed doc: {e}")

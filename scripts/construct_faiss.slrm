@@ -1,0 +1,33 @@
+#!/bin/sh
+#SBATCH --job-name=construct_faiss
+#SBATCH --array=0-0
+#SBATCH --partition=kempner
+#SBATCH --gres=gpu:1
+#SBATCH --mem=60G
+#SBATCH -t 0-72:00
+#SBATCH -c 1
+#SBATCH --output=/n/home04/rrinberg/catered_out/data_unlearning/construct-faiss-%A__%a.out
+#SBATCH --mail-user=royrinberg@gmail.com  
+#SBATCH --mail-type=ALL
+#SBATCH --account kempner_emalach_lab
+
+
+module load python/3.10.12-fasrc01
+module load intelpython/3.9.16-fasrc01
+module load cuda cudnn
+
+mamba activate unlearning_3.10
+
+
+## logging
+DATA_DIR=/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia
+CODE_DIR=/n/home04/rrinberg/code/wiki-rag
+
+
+## Run the experiment
+cd $DATA_DIR
+
+python wiki_rag/construct_faiss.py 10000000
+
+
+
