@@ -11,6 +11,7 @@ from tqdm import tqdm
 import pickle 
 import pandas as pd
 
+# HACK - hard coded to my own addresses!
 default_cache_dir = Path('/n/netscratch/vadhan_lab/Lab/rrinberg/HF_cache')
 data_cache= Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia")
 
