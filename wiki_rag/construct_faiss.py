@@ -46,19 +46,25 @@ os.environ["HF_HUB_CACHE"] = str(cache_dir)
 
 
 # Load model
-model_id = 'HuggingFaceH4/zephyr-7b-beta'
-#model_id = "mistralai/Mistral-7B-Instruct-v0.3"
-print(f"model_id- {model_id}")
+
 print(f"cache_dir - {cache_dir}")   
 device = 'cuda:0'
 dtype= torch.float32
-model = AutoModelForCausalLM.from_pretrained(model_id,
-                 
-                                             torch_dtype=dtype, cache_dir=cache_dir,)
-model = model.to(device)
-model.requires_grad_(False)
-tokenizer = AutoTokenizer.from_pretrained(model_id, 
-                                          use_fast=False, cache_dir=cache_dir)
+
+
+from langchain.embeddings import HuggingFaceEmbeddings
+
+class PromptedBGE(HuggingFaceEmbeddings):
+    def embed_documents(self, texts):
+        return super().embed_documents([
+            f"Represent this document for retrieval: {t}" for t in texts
+        ])
+
+    def embed_query(self, text):
+        return super().embed_query(f"Represent this query for retrieval: {text}")
+# BAAI_embedding = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en")
+
+BAAI_embedding = PromptedBGE(model_name="BAAI/bge-base-en")  # or bge-large-en
 
 
 
@@ -82,7 +88,6 @@ if __name__ == "__main__":
 
     SAVE_PATH = Path(f"/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia/faiss_index__top_{max_articles}__{date_str}")
     
-    embeddings = rag.ModelEmbeddings(model, tokenizer, device)
     vectorstore = None
     counts = 0
 
@@ -134,7 +139,8 @@ if __name__ == "__main__":
         
         text = text.strip()
         # abstract is first 3 par
-        abstract = "\n".join(text.split("\n")[:5])
+        #abstract = "\n".join(text.split("\n")[:5]) # 1st paragraph only
+        abstract = text
         
         
         doc = Document(page_content=abstract, metadata={"title": title, "ind": i, "url": url, "id": id_})
@@ -145,12 +151,12 @@ if __name__ == "__main__":
             if vectorstore is None:
                 print(f"len buffer - {len(buffer)}")
                 with torch.no_grad():
-                    vectorstore = FAISS.from_documents(buffer, embeddings)
+                    vectorstore = FAISS.from_documents(buffer, BAAI_embedding)
             else:
                 vectorstore.add_documents(buffer)
             buffer.clear()
             
-        if counts % 500 == 0:
+        if counts % 5000 == 0:
             print(f"✅ FAISS index updated with {counts} articles.")
             vectorstore.save_local(SAVE_PATH)
             print(f"✅ FAISS index saved to {SAVE_PATH}")
@@ -159,7 +165,14 @@ if __name__ == "__main__":
     # print out how many
     print(f"Total articles processed: {counts}")
     print(f"entries in vectorstore: {vectorstore.index.ntotal}")
-    
+    # clear the buffer
+    if vectorstore is None:
+        print(f"len buffer - {len(buffer)}")
+        with torch.no_grad():
+            vectorstore = FAISS.from_documents(buffer, BAAI_embedding)
+    else:
+        vectorstore.add_documents(buffer)
+    buffer.clear()
     if vectorstore:
         vectorstore.save_local(SAVE_PATH)
         print(f"✅ FAISS index saved to {SAVE_PATH}")

@@ -21,13 +21,13 @@ mamba activate unlearning_3.10
 nvidia-smi
 ## logging
 DATA_DIR=/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia
-CODE_DIR=/n/home04/rrinberg/code/wiki-rag
+CODE_DIR=/n/home04/rrinberg/code/data_to_concept_unlearning/wiki-rag
 
 
 ## Run the experiment
 cd $CODE_DIR
 
-python wiki_rag/construct_faiss.py 1000000
+python wiki_rag/construct_faiss.py 10_000_000
 
 
 
