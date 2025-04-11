@@ -24,6 +24,8 @@ Date of download of Wikipedia : April 10, 2025.
 3. load abstracts into FAISS with title as RAG response 
 4. save that 
 5. write a function that you give a text, and it returns the title, and then also queries wikipedia (either locally, or through HTTPS)
+6. extract the top 1M entries from: `https://dumps.wikimedia.org/other/pageviews/2024/2024-12/`, and only look at those.
+
 
 # Do it for yourself, from Scratch
 1. Download Wikipedia full (~22 GB, 2 hours to download over Wget, ~30 min using Aria2c)

@@ -27,4 +27,6 @@ CODE_DIR=/n/home04/rrinberg/code/wiki-rag
 ## Run the experiment
 cd $DATA_DIR
 
-wikiextractor --json enwiki-latest-pages-articles.xml.bz2 
+wikiextractor --output text enwiki-latest-pages-articles.xml.bz2
+
+#wikiextractor --output json --json enwiki-latest-pages-articles.xml.bz2 

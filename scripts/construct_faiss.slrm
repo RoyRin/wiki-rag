@@ -25,7 +25,7 @@ CODE_DIR=/n/home04/rrinberg/code/wiki-rag
 
 
 ## Run the experiment
-cd $DATA_DIR
+cd $CODE_DIR
 
 python wiki_rag/construct_faiss.py 10000000
 

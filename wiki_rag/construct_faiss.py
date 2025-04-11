@@ -67,9 +67,12 @@ def batched(iterable: Iterator, batch_size: int):
     while batch := list(islice(iterator, batch_size)):
         yield batch
 
+import datetime
 
-SAVE_PATH = Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia/faiss_index")
 if __name__ == "__main__":
+    date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    SAVE_PATH = Path(f"/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia/2_faiss_index__{date_str}")
+
     import sys 
     max_articles = int(sys.argv[1]) if len(sys.argv) > 1 else 2000
     
@@ -81,8 +84,7 @@ if __name__ == "__main__":
     counts = 0
     batch_size = 4
 
-    docs = []
-        
+
     for i, d in enumerate(wiki_generator):
         #print(f"Processing article {counts}: {d['title']}")
         if i > int(max_articles):
@@ -96,19 +98,25 @@ if __name__ == "__main__":
             continue
         counts +=1
         
-        if counts % 25 == 0:
+        if counts % 250 == 0:
             print(f"Processed {counts} articles so far...")
         
         text = text.strip()
         # abstract is first 3 par
         abstract = "\n".join(text.split("\n")[:5])
-        doc = Document(page_content=abstract, metadata={"title": title})
+        doc = Document(page_content=abstract, metadata={"title": title, "ind": i, "url": url, "id": id_})
         
         if vectorstore is None:
             vectorstore = FAISS.from_documents([doc], embeddings)
         else:
             vectorstore.add_documents([doc])
 
+        if counts % 2_500 == 0:
+            print(f"✅ FAISS index updated with {counts} articles.")
+            # save 
+            vectorstore.save_local(SAVE_PATH)
+            print(f"✅ FAISS index saved to {SAVE_PATH}")
+            
     # save 
     
     if vectorstore:
