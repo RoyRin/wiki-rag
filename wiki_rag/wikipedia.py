@@ -6,10 +6,21 @@ import json
 import os
 import glob
 from xml.etree import ElementTree as ET
-
+import re 
 default_cache_dir = Path('/n/netscratch/vadhan_lab/Lab/rrinberg/HF_cache')
 data_cache= Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia")
 
+
+def clean_title(title):
+    date_clean_title = re.sub(r'\s*\(\d{4}\)', '', title) # remove date at the end
+    
+    title = date_clean_title.replace(' ', '')
+    # remove :
+    title = title.replace(':', '')
+    # title to lower
+    title = title.replace("-", "")
+    title = title.lower()
+    return title
 
 def extract_abstract_from_text(text):
     
