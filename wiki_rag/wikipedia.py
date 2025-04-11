@@ -1,29 +1,25 @@
-import torch
-from typing import List
-import numpy as np
-from pathlib import Path 
+from pathlib import Path
 import json
 import os
 import glob
 from xml.etree import ElementTree as ET
-import re 
-from tqdm import tqdm 
-import pickle 
+import re
+from tqdm import tqdm
 import pandas as pd
+import json
+import pickle
 
 # HACK - hard coded to my own addresses!
 default_cache_dir = Path('/n/netscratch/vadhan_lab/Lab/rrinberg/HF_cache')
-data_cache= Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia")
+data_cache = Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia")
 
-import json
+
 def save_json(d, filepath):
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(d, f, ensure_ascii=False, indent=4)
-        
-        
-import pickle
+
+
 def save_pickle(d, filepath):
-    import pickle
     with open(filepath, 'wb') as f:
         pickle.dump(d, f)
 
@@ -34,7 +30,7 @@ def get_title_to_path_index(json_dir, title_to_file_path_f_pkl):
     if title_to_file_path_f_pkl.exists():
         with open(title_to_file_path_f_pkl, 'rb') as f:
             title_to_file_path = pickle.load(f)
-        
+
     else:
         for path in tqdm(jsons_):
             with open(path, 'r', encoding='utf-8') as f:
@@ -70,11 +66,10 @@ def get_wiki_page(title, title_to_file_path):
     return json.loads(data)
 
 
-def get_sorted_english_df(output_f, stats_f= None):
+def get_sorted_english_df(output_f, stats_f=None):
     # Replace 'filename.txt' with your actual file path
-    
+
     if not output_f.exists() and stats_f is not None:
-        
         """
         Example from stats file:
         project page_title views bytes
@@ -84,30 +79,37 @@ def get_sorted_english_df(output_f, stats_f= None):
         en Fertiliser 1 0
         en.m Fertilisers_and_Chemicals_Travancore 1 0
         """
-        df = pd.read_csv(stats_f, sep=' ', header=None, names=['project', 'page_title', 'views', 'bytes'])
+        df = pd.read_csv(stats_f,
+                         sep=' ',
+                         header=None,
+                         names=['project', 'page_title', 'views', 'bytes'])
 
         english_mask = (df["project"] == "en") | (df["project"] == "en.m")
         english_df = df[english_mask]
 
-
         english_df.head()
 
-        english_df = english_df.groupby('page_title', as_index=False).agg({'views': 'sum', 'bytes': 'sum'})
-
+        english_df = english_df.groupby('page_title', as_index=False).agg({
+            'views':
+            'sum',
+            'bytes':
+            'sum'
+        })
 
         # sort by views
         english_df = english_df.sort_values(by='views', ascending=False)
         # combine views from en and en.m
 
         # for page ttles swap _ wit " "
-        english_df['page_title'] = english_df['page_title'].str.replace('_', ' ')
+        english_df['page_title'] = english_df['page_title'].str.replace(
+            '_', ' ')
 
         # drop bytes col
         english_df = english_df.drop(columns=['bytes'])
         # save to asset_dir
         english_df.to_csv(output_f, index=False)
-        
-        print(f"saved to {output_f}")   
+
+        print(f"saved to {output_f}")
     else:
         english_df = pd.read_csv(output_f)
         print(f"loaded from {output_f}")
@@ -115,8 +117,9 @@ def get_sorted_english_df(output_f, stats_f= None):
 
 
 def clean_title(title):
-    date_clean_title = re.sub(r'\s*\(\d{4}\)', '', title) # remove date at the end
-    
+    date_clean_title = re.sub(r'\s*\(\d{4}\)', '',
+                              title)  # remove date at the end
+
     title = date_clean_title.replace(' ', '')
     # remove :
     title = title.replace(':', '')
@@ -125,13 +128,15 @@ def clean_title(title):
     title = title.lower()
     return title
 
+
 def extract_abstract_from_text(text):
-    
+
     for paragraph in text.split('\n'):
         paragraph = paragraph.strip()
         if paragraph:
             return paragraph
     return None
+
 
 def read_article_from_json(full_path, offset):
     """ 
@@ -146,7 +151,8 @@ def read_article_from_json(full_path, offset):
             text = data.get("text", "")
             return title, text
         except json.JSONDecodeError:
-            return None, None   
+            return None, None
+
 
 def wikipedia_abstract_generator(path_to_extracted_dir):
     """
@@ -173,7 +179,7 @@ def wikipedia_abstract_generator(path_to_extracted_dir):
                     abstract = extract_abstract_from_text(text)
                     if abstract:
                         yield (title.strip(), abstract)
-                        
+
 
 def build_title_index(path_to_extracted_dir):
     """ 
@@ -200,23 +206,20 @@ def build_title_index(path_to_extracted_dir):
     return index
 
 
-
-
-def get_article_local(title, local_dir = None):
-    # Call Wiki Extractor 
+def get_article_local(title, local_dir=None):
+    # Call Wiki Extractor
     if local_dir is None:
         local_dir = data_cache
-    
+
     index = build_title_index(local_dir)
     if title not in index:
         return None
     full_path, offset = index[title]
-    
-    
-    pass 
+
+    pass
 
 
-def get_article_remote(title, abstract_only = False ):
+def get_article_remote(title, abstract_only=False):
     import wikipedia
     # Set language (optional, default is English)
     wikipedia.set_lang("en")
@@ -232,7 +235,8 @@ def get_article_remote(title, abstract_only = False ):
 
 
 def parse_wikiextractor_output(extracted_dir):
-    for file_path in glob.glob(os.path.join(extracted_dir, '**', 'wiki_*'), recursive=True):
+    for file_path in glob.glob(os.path.join(extracted_dir, '**', 'wiki_*'),
+                               recursive=True):
         with open(file_path, 'r', encoding='utf-8') as f:
             contents = f.read()
             docs = contents.split('</doc>')
