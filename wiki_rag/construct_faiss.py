@@ -24,13 +24,15 @@ from pathlib import Path
 
 import torch 
 from transformers.utils import logging
+from tqdm import tqdm 
+
 logging.set_verbosity_debug()
 
 
 # My personal cache directory
 cache_dir = Path('/n/netscratch/vadhan_lab/Lab/rrinberg/HF_cache')
 data_cache= Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia")
-data_cache= Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia/text")
+
 if not cache_dir.exists():
     cache_dir = None 
 if not data_cache.exists():
@@ -61,6 +63,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_id,
 
 
 
+
 # === Helper to batch an iterator ===
 def batched(iterable: Iterator, batch_size: int):
     iterator = iter(iterable)
@@ -71,53 +74,91 @@ import datetime
 
 if __name__ == "__main__":
     date_str = datetime.datetime.now().strftime("%Y-%m-%d")
-    SAVE_PATH = Path(f"/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia/2_faiss_index__{date_str}")
+    
+
 
     import sys 
     max_articles = int(sys.argv[1]) if len(sys.argv) > 1 else 2000
-    
+
+    SAVE_PATH = Path(f"/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia/faiss_index__top_{max_articles}__{date_str}")
     
     embeddings = rag.ModelEmbeddings(model, tokenizer, device)
     vectorstore = None
-
-    wiki_generator = wikipedia.parse_wikiextractor_output(data_cache)
     counts = 0
-    batch_size = 4
 
+    # get the top 1M articles
+    HOMEDIR = Path.home()
+    BASEDIR = HOMEDIR / 'code/wiki-rag'
+    asset_dir = BASEDIR / 'assets'
 
-    for i, d in enumerate(wiki_generator):
+    json_dir = data_cache / 'json'
+
+    output_f = asset_dir / 'english_pageviews.csv'
+    stats_f = asset_dir / 'pageviews-20241201-000000'
+    print(f"loading english df from {output_f}")
+    english_df = wikipedia.get_sorted_english_df(output_f, stats_f) # output - where to output, stats_f base
+    
+    title_to_file_path_f_pkl = asset_dir / 'title_to_file_path.pkl'
+    print(f"loading wiki index from {title_to_file_path_f_pkl}")
+
+    title_to_file_path = wikipedia.get_title_to_path_index(json_dir, title_to_file_path_f_pkl)
+
+    
+    buffer = []
+    batch_size = 10
+
+    for i, row in enumerate(tqdm(english_df.itertuples(index=False))):
+
         #print(f"Processing article {counts}: {d['title']}")
         if i > int(max_articles):
             break
 
-        title = d['title']
-        url = d['url']
-        text = d['text']
-        id_ = d.get('id')
+        title = row.page_title
+        clean_title_ = wikipedia.clean_title(title)
+        data = wikipedia.get_wiki_page(clean_title_, title_to_file_path)
+        if data is None:
+            continue
+        
+        title = data['title']
+        url = data['url']
+        text = data['text']
+        id_ = data.get('id')
+        
         if len(text) < 100:
             continue
-        counts +=1
         
+        counts +=1
+    
         if counts % 250 == 0:
             print(f"Processed {counts} articles so far...")
         
         text = text.strip()
         # abstract is first 3 par
         abstract = "\n".join(text.split("\n")[:5])
+        
+        
         doc = Document(page_content=abstract, metadata={"title": title, "ind": i, "url": url, "id": id_})
         
-        if vectorstore is None:
-            vectorstore = FAISS.from_documents([doc], embeddings)
-        else:
-            vectorstore.add_documents([doc])
+        buffer.append(doc)
 
-        if counts % 2_500 == 0:
+        if len(buffer) >= batch_size:
+            if vectorstore is None:
+                print(f"len buffer - {len(buffer)}")
+                with torch.no_grad():
+                    vectorstore = FAISS.from_documents(buffer, embeddings)
+            else:
+                vectorstore.add_documents(buffer)
+            buffer.clear()
+            
+        if counts % 500 == 0:
             print(f"✅ FAISS index updated with {counts} articles.")
-            # save 
             vectorstore.save_local(SAVE_PATH)
             print(f"✅ FAISS index saved to {SAVE_PATH}")
             
     # save 
+    # print out how many
+    print(f"Total articles processed: {counts}")
+    print(f"entries in vectorstore: {vectorstore.index.ntotal}")
     
     if vectorstore:
         vectorstore.save_local(SAVE_PATH)

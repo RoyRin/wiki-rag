@@ -1,9 +1,9 @@
 #!/bin/sh
 #SBATCH --job-name=construct_faiss
 #SBATCH --array=0-0
-#SBATCH --partition=kempner
+#SBATCH --partition=kempner_h100
 #SBATCH --gres=gpu:1
-#SBATCH --mem=60G
+#SBATCH --mem=80G
 #SBATCH -t 0-72:00
 #SBATCH -c 1
 #SBATCH --output=/n/home04/rrinberg/catered_out/data_unlearning/construct-faiss-%A__%a.out
@@ -18,7 +18,7 @@ module load cuda cudnn
 
 mamba activate unlearning_3.10
 
-
+nvidia-smi
 ## logging
 DATA_DIR=/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia
 CODE_DIR=/n/home04/rrinberg/code/wiki-rag
@@ -27,7 +27,7 @@ CODE_DIR=/n/home04/rrinberg/code/wiki-rag
 ## Run the experiment
 cd $CODE_DIR
 
-python wiki_rag/construct_faiss.py 10000000
+python wiki_rag/construct_faiss.py 1000000
 
 
 

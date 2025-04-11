@@ -7,8 +7,110 @@ import os
 import glob
 from xml.etree import ElementTree as ET
 import re 
+from tqdm import tqdm 
+import pickle 
+import pandas as pd
+
 default_cache_dir = Path('/n/netscratch/vadhan_lab/Lab/rrinberg/HF_cache')
 data_cache= Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia")
+
+import json
+def save_json(d, filepath):
+    with open(filepath, 'w', encoding='utf-8') as f:
+        json.dump(d, f, ensure_ascii=False, indent=4)
+        
+        
+import pickle
+def save_pickle(d, filepath):
+    import pickle
+    with open(filepath, 'wb') as f:
+        pickle.dump(d, f)
+
+
+def get_title_to_path_index(json_dir, title_to_file_path_f_pkl):
+    jsons_ = list(json_dir.glob('**/wiki_*'))
+
+    if title_to_file_path_f_pkl.exists():
+        with open(title_to_file_path_f_pkl, 'rb') as f:
+            title_to_file_path = pickle.load(f)
+        
+    else:
+        for path in tqdm(jsons_):
+            with open(path, 'r', encoding='utf-8') as f:
+                for line_number, line in enumerate(f, start=1):
+                    try:
+                        data = json.loads(line)
+                        title = data['title']
+                        title = clean_title(title)
+                        # Save both file path and line number
+                        title_to_file_path[title] = (str(path), line_number)
+                    except json.JSONDecodeError:
+                        continue
+        print(f"saved json")
+        save_pickle(title_to_file_path, title_to_file_path_f_pkl)
+    return title_to_file_path
+
+
+def read_line_from_file(path, line_number):
+    """Read a specific line (1-indexed) from a text file."""
+    with open(path, 'r', encoding='utf-8') as f:
+        for current_line_number, line in enumerate(f, start=1):
+            if current_line_number == line_number:
+                return line
+    raise ValueError(f"Line number {line_number} not found in file: {path}")
+
+
+def get_wiki_page(title, title_to_file_path):
+    path, row_num = title_to_file_path.get(title, (None, None))
+    if path is None:
+        return None
+    # read the json file, and find the line with the title
+    data = read_line_from_file(path, row_num)
+    return json.loads(data)
+
+
+def get_sorted_english_df(output_f, stats_f= None):
+    # Replace 'filename.txt' with your actual file path
+    
+    if not output_f.exists() and stats_f is not None:
+        
+        """
+        Example from stats file:
+        project page_title views bytes
+        ```
+        en.m Fertile_material 1 0
+        en.m Fertilisation 3 0
+        en Fertiliser 1 0
+        en.m Fertilisers_and_Chemicals_Travancore 1 0
+        """
+        df = pd.read_csv(stats_f, sep=' ', header=None, names=['project', 'page_title', 'views', 'bytes'])
+
+        english_mask = (df["project"] == "en") | (df["project"] == "en.m")
+        english_df = df[english_mask]
+
+
+        english_df.head()
+
+        english_df = english_df.groupby('page_title', as_index=False).agg({'views': 'sum', 'bytes': 'sum'})
+
+
+        # sort by views
+        english_df = english_df.sort_values(by='views', ascending=False)
+        # combine views from en and en.m
+
+        # for page ttles swap _ wit " "
+        english_df['page_title'] = english_df['page_title'].str.replace('_', ' ')
+
+        # drop bytes col
+        english_df = english_df.drop(columns=['bytes'])
+        # save to asset_dir
+        english_df.to_csv(output_f, index=False)
+        
+        print(f"saved to {output_f}")   
+    else:
+        english_df = pd.read_csv(output_f)
+        print(f"loaded from {output_f}")
+    return english_df
 
 
 def clean_title(title):
