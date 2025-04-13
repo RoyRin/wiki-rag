@@ -18,13 +18,21 @@ HuggingFace RAG here: https://huggingface.co/royrin/wiki-rag/tree/main
 4. Gives a simple API to extract the full wiki article (either through URL or locally) given a title.
 
 
-# Necessary things left to do:
-1. write a function that you give a text, and it returns the title, and then also queries wikipedia (either locally, or through HTTPS)
-2. After RAG finishes computing, share it!
-3. a bit of code clean up due to hardcoding paths
+# TODO:
+1. Create some example code for running the FAISS
+2. For RAG, push the store to GPU for speed
+    ```
+        cpu_index = faiss.read_index(str(faiss_path))
+        res = faiss.StandardGpuResources()
+        gpu_index = faiss.index_cpu_to_gpu(res, 0, cpu_index)
+    ```
+3. write a function that you give a text, and it returns the title, and then also queries wikipedia (either locally, or through HTTPS)
+4. a bit of code clean up due to hardcoding paths
+5. Set up a RAG server code,
 
 # Fun things to do
 1. update RAG to only store an index into the DB, so that you can interface it with PathORAM ( and run it in TEE!)
+2. set up RAG serve to run in AWS nitro
 
 
 # Do it for yourself, from Scratch

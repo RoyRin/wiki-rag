@@ -9,6 +9,9 @@ packages = [
 	{include = "wiki_rag"},
 ]
 
+[project.scripts]
+rag-server = "wiki_rag.rag_server:main"
+
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -24,6 +27,9 @@ faiss-cpu = "^1.10.0"
 faiss-gpu = "^1.7.2"
 wikiextractor = "^3.0.6"
 langchain-community = "^0.3.21"
+fastapi = "^0.115.12"
+uvicorn = {extras = ["standard"], version = "^0.34.1"}
+cryptography = "^44.0.2"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
