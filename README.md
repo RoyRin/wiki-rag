@@ -8,6 +8,8 @@ There are things like this, but somehow nothing quite like this. Other things re
 
 Date of download of Wikipedia : April 10, 2025, from `https://dumps.wikimedia.org/other/pageviews/2024/2024-12/`.
 
+HuggingFace RAG here: https://huggingface.co/royrin/wiki-rag/tree/main
+
 # What this repo does:
 
 1. I downloaded Wikipedia into a cache (~22 GB, 2 hours to download). This takes time. I have done it locally, and extracted the first paragraph of each title into a new dataset, which is available here. 
