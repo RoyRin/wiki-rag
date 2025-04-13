@@ -19,6 +19,7 @@ HuggingFace RAG here: https://huggingface.co/royrin/wiki-rag/tree/main
 
 
 # TODO:
+0. run 
 1. Create some example code for running the FAISS
 2. For RAG, push the store to GPU for speed
     ```
