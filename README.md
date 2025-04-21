@@ -70,3 +70,68 @@ helpful content: https://www.youtube.com/watch?v=t-XmYt2z5S8&ab_channel=AmazonWe
 2. connect to AWS EC2 instance
 2. set up an AWS nitro 
 4. run AWS nitro image EC2 instance as a server
+
+here are the EC2 instances that allow nitro: https://docs.aws.amazon.com/ec2/latest/instancetypes/ec2-nitro-instances.html
+
+"https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html?
+        Parent instance requirements:
+        Virtualized Nitro-based instances
+
+        Intel or AMD-based instances with at least 4 vCPUs, excluding c7i.24xlarge, c7i.48xlarge, G4ad, m7i.24xlarge, m7i.48xlarge, M7i-Flex, r7i.24xlarge, r7i.48xlarge, R7iz, T3, T3a, Trn1, Trn1n, U-*, VT1
+
+        AWS Graviton-based instances with at least 2 vCPUs, excluding A1, C7gd, C7gn, G5g, Hpc7g, Im4gn, Is4gen, M7g, M7gd, R7g, R7gd, T4g
+
+        Linux or Windows (2016 or later) operating system
+
+        Enclave requirements:
+
+        Linux operating system only
+
+**Note**: make sure to "enable Nitro" (I run `m5.xlarge` with 4 vCPUs), and
+
+*Note: you need to build the dockerfile on the AWS instance*
+
+
+Here is the code to run on the EC2 instance ( AWS linux AMI): 
+
+```
+    sudo amazon-linux-extras enable aws-nitro-enclaves-cli
+    sudo yum install -y aws-nitro-enclaves-cli
+    sudo yum install -y aws-nitro-enclaves-cli-devel # see https://github.com/aws/aws-nitro-enclaves-cli/issues/513
+
+    # log in
+    aws configure
+
+    # Log into ECR
+        aws ecr get-login-password | docker login --username AWS --password-stdin 108871799768.dkr.ecr.us-east-1.amazonaws.com/wiki-rag
+    
+    #    <ECR-INSTANCE-ID>.dkr.ecr.us-east-1.amazonaws.com/wiki-rag
+
+    # Start docker
+    sudo systemctl start docker
+
+    # create nitro 
+    sudo usermod -aG ne ec2-user
+    newgrp ne
+
+    # set up nitro
+    sudo systemctl start nitro-enclaves-allocator.service
+    sudo systemctl enable nitro-enclaves-allocator.service
+
+
+
+    # make EC2 instance run as part of docker group 
+    sudo usermod -aG docker ec2-user
+    newgrp docker
+
+    # pull docker
+    docker pull 108871799768.dkr.ecr.us-east-1.amazonaws.com/wiki-rag # outdated - now we build it locally
+
+
+    ### NITRO:
+    nitro-cli build-enclave \
+        --docker-uri 108871799768.dkr.ecr.us-east-1.amazonaws.com/wiki-rag:latest \
+        --output-file rag-enclave.eif
+```
+
+help info: https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html
