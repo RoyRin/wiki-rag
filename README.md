@@ -19,7 +19,9 @@ HuggingFace RAG here: https://huggingface.co/royrin/wiki-rag/tree/main
 
 
 # TODO:
-0. run 
+0. test that server runs
+1. run server in AWS nitro with attestation
+2. run PathORAM in 
 1. Create some example code for running the FAISS
 2. For RAG, push the store to GPU for speed
     ```
@@ -51,3 +53,20 @@ HuggingFace RAG here: https://huggingface.co/royrin/wiki-rag/tree/main
 # Helpful Links:
 1. Wikipedia downloads: `https://dumps.wikimedia.org/enwiki/latest/`
 2. Wikipedia page views: `https://dumps.wikimedia.org/other/pageviews/2024/2024-12/`
+
+
+# TEEs -  AWS nitro:
+you can run AWS nitro from a regular EC2 instance, there are 5 commands:
+1. build-enclave
+    converts docker-image into enclave image
+1. run-enclave
+1. descibe-enclave
+1. console
+1. terminate-enclave
+helpful content: https://www.youtube.com/watch?v=t-XmYt2z5S8&ab_channel=AmazonWebServices 
+
+# Setting up a TEE for *private* RAG:
+1. create docker image (we build one with the DB already) 
+2. connect to AWS EC2 instance
+2. set up an AWS nitro 
+4. run AWS nitro image EC2 instance as a server

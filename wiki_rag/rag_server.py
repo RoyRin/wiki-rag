@@ -3,16 +3,21 @@ from pydantic import BaseModel
 from typing import Optional
 import uvicorn
 import base64
-import faiss
+#import faiss
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
+from pathlib import Path 
+from langchain.vectorstores import FAISS
 
 # 🔐 Symmetric encryption key (must be securely shared after attestation)
 AES_KEY = os.environ.get("RAG_AES_KEY")  # 256-bit key as base64
 
 app = FastAPI()
+
+# HACK: Disable encryption for now
+do_encryption = False
 
 # 🧠 Load tokenizer + model
 from langchain.embeddings import HuggingFaceEmbeddings
@@ -36,6 +41,8 @@ BAAI_embedding = PromptedBGE(model_name="BAAI/bge-base-en")  # or bge-large-en
 
 ### LOAD RAG
 FAISS_PATH = None # ERROR - need to set FAISS_Path
+FAISS_PATH = Path("/Users/roy/data/wikipedia/hugging_face/wiki-rag")
+FAISS_PATH = FAISS_PATH/ "wiki_index__top_100000__2025-04-11"
 vectorstore = FAISS.load_local(FAISS_PATH, BAAI_embedding, allow_dangerous_deserialization=True  # <-- set this only if you created the file
 )
 
@@ -60,13 +67,21 @@ class Query(BaseModel):
 
 @app.post("/rag")
 async def rag_endpoint(query: Query):
-    key = base64.b64decode(AES_KEY)
-    user_query = decrypt_message(query.encrypted_query, key)
+    if do_encryption:
+        print("should not be called")
+        key = base64.b64decode(AES_KEY)
+        user_query = decrypt_message(query.encrypted_query, key)
+    else:
+        user_query = query.encrypted_query  # use plaintext
 
-    response = vectorstore.similarity_search(query, k=1)[0]
+    response = vectorstore.similarity_search(user_query, k=1)[0]
 
-    encrypted_response = encrypt_message(response, key)
-    return {"encrypted_response": encrypted_response}
+    if do_encryption:
+        encrypted_response = encrypt_message(response, key)
+    else:
+        encrypted_response = response
+
+    return {"results": [encrypted_response]}
 
 
 @app.post("/provision")
