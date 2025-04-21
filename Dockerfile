@@ -15,31 +15,16 @@ RUN    apt-get install -y --fix-missing  \
     && apt update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-#RUN    build-essential 
 
-
-# Copy requirements and install
-#COPY requirements.txt .
-#-r requirements.txt
-
-# Copy server code
+    # Copy server code
 COPY README.md .
 COPY wiki_rag .
 COPY pyproject.toml .
 COPY poetry.lock .
 
-
-#COPY pyproject.toml .
-
 RUN pip install --upgrade pip && pip install .
 
-
 # Optional: Copy other files like FAISS index if needed
-
-# /Users/roy/code/research/private-RAG/wiki-rag
-# /Users/roy/data/wikipedia/hugging_face/wiki-rag
-#COPY data/wiki_index__top_100000__2025-04-11 /app/data/
-#
 
 COPY data /app/data/
 
