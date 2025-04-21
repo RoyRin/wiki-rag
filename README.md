@@ -2,7 +2,7 @@
 
 Quick start to download entire Wikipedia and load it into a RAG for you. This RAG code gives you a RAG that directly gives you the relevant wikipedia article. It's entirely offline, so saves on requests to Wikipedia. 
 
-Note: The RAG is generated on the first 3 paragraphs of the Wikipedia page. To then get the full page from Wikipedia, you can access a local version of Wikipedia, or make an API call for that page.
+Note: The RAG is generated on the entire Wikipedia page (doing less than that generates poor results). To then get the full page from Wikipedia, you can access a local version of Wikipedia, or make an API call for that page.
 
 There are things like this, but somehow nothing quite like this. Other things require many HTTP requests to Wikipedia (like this https://llamahub.ai/l/readers/llama-index-readers-wikipedia?from=).
 
