@@ -10,6 +10,8 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
 from pathlib import Path 
 from langchain.vectorstores import FAISS
+import sys 
+
 
 # 🔐 Symmetric encryption key (must be securely shared after attestation)
 AES_KEY = os.environ.get("RAG_AES_KEY")  # 256-bit key as base64
@@ -40,12 +42,24 @@ BAAI_embedding = PromptedBGE(model_name="BAAI/bge-base-en")  # or bge-large-en
 # You'd load your document embeddings here
 
 ### LOAD RAG
-FAISS_PATH = None # ERROR - need to set FAISS_Path
 FAISS_PATH = Path("/Users/roy/data/wikipedia/hugging_face/wiki-rag")
 FAISS_PATH = FAISS_PATH/ "wiki_index__top_100000__2025-04-11"
-vectorstore = FAISS.load_local(FAISS_PATH, BAAI_embedding, allow_dangerous_deserialization=True  # <-- set this only if you created the file
-)
+FAISS_PATH = os.environ.get("FAISS_PATH", FAISS_PATH)
+print(f"FAISS_PATH {FAISS_PATH}")
+# 📚 Load FAISS index (path optionally provided via CLI)
+def load_vectorstore(faiss_path: Optional[str] = FAISS_PATH):
+    if faiss_path is None:
+        default_FAISS_PATH = Path("/Users/roy/data/wikipedia/hugging_face/wiki-rag")
+        default_FAISS_PATH = default_FAISS_PATH/ "wiki_index__top_100000__2025-04-11"
+        faiss_path = default_FAISS_PATH
 
+    else:
+        faiss_path = Path(faiss_path)
+    print(f"loaded vector store")
+    return FAISS.load_local(faiss_path, BAAI_embedding, allow_dangerous_deserialization=True)
+
+# Will be set in main()
+vectorstore = load_vectorstore()
 
 # 🔒 Decrypt helper
 def decrypt_message(enc_b64: str, key: bytes) -> str:
@@ -67,6 +81,8 @@ class Query(BaseModel):
 
 @app.post("/rag")
 async def rag_endpoint(query: Query):
+    global  vectorstore
+    print(f"vectorstore {vectorstore}")
     if do_encryption:
         print("should not be called")
         key = base64.b64decode(AES_KEY)
@@ -84,6 +100,14 @@ async def rag_endpoint(query: Query):
     return {"results": [encrypted_response]}
 
 
+
+@app.post("/test")
+async def rag_endpoint(query: Query):
+    global  vectorstore
+    
+    print(f"query {query}")
+    return {"results": [vectorstore]}
+
 @app.post("/provision")
 async def provision_key(payload: dict):
     raw = payload["aes_key"]
@@ -91,12 +115,19 @@ async def provision_key(payload: dict):
     AES_KEY = raw
     return {"status": "ok"}
 
+
 def main():
     import uvicorn
+    global vectorstore
+
+    # Optional CLI arg: FAISS path
+    faiss_arg = sys.argv[1] if len(sys.argv) > 1 else None
+    vectorstore = load_vectorstore(faiss_arg)
+    print(f"vectorstore {vectorstore}") 
     uvicorn.run("rag_server:app", host="0.0.0.0", port=8000)
 
-
 if __name__ == "__main__":
+    print("hello!")
     main()
 
 
