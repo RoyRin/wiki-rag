@@ -15,12 +15,18 @@ RUN apt-get update && apt-get install -y \
 COPY wiki_rag .
 #RUN pip install --no-cache-dir .
 COPY requirements.txt .
-#COPY pyproject.toml README.md .
+COPY pyproject.toml README.md .
+
+#RUN pip install --upgrade pip \
+#   && pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 RUN pip install --upgrade pip \
-   && pip install --no-cache-dir --prefix=/install -r requirements.txt
+    && pip install -e .
 
+##
 # Stage 2: Final runtime image
+##
+
 FROM python:3.10-slim
 
 WORKDIR /app
