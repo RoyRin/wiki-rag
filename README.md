@@ -96,19 +96,17 @@ Here is the code to run on the EC2 instance ( AWS linux AMI):
 
 ```
     sudo amazon-linux-extras enable aws-nitro-enclaves-cli
+
+
     sudo yum install -y aws-nitro-enclaves-cli
     sudo yum install -y aws-nitro-enclaves-cli-devel # see https://github.com/aws/aws-nitro-enclaves-cli/issues/513
+    sudo yum install -y git
 
-    # log in
-    aws configure
-
-    # Log into ECR
-        aws ecr get-login-password | docker login --username AWS --password-stdin 108871799768.dkr.ecr.us-east-1.amazonaws.com/wiki-rag
-    
-    #    <ECR-INSTANCE-ID>.dkr.ecr.us-east-1.amazonaws.com/wiki-rag
 
     # Start docker
     sudo systemctl start docker
+    sudo usermod -aG docker ec2-user
+    newgrp docker
 
     # create nitro 
     sudo usermod -aG ne ec2-user
@@ -118,20 +116,44 @@ Here is the code to run on the EC2 instance ( AWS linux AMI):
     sudo systemctl start nitro-enclaves-allocator.service
     sudo systemctl enable nitro-enclaves-allocator.service
 
-
-
-    # make EC2 instance run as part of docker group 
-    sudo usermod -aG docker ec2-user
-    newgrp docker
-
     # pull docker
-    docker pull 108871799768.dkr.ecr.us-east-1.amazonaws.com/wiki-rag # outdated - now we build it locally
 
 
     ### NITRO:
+    # local
+    docker build -t wiki-rag-teeny .
+    nitro-cli build-enclave \
+        --docker-uri wiki-rag-teeny:latest \
+        --output-file rag-enclave.eif
+
+
+
+    # give the enclave enough memory!
+    sudo vim /etc/nitro_enclaves/allocator.yaml
+    sudo systemctl restart nitro-enclaves-allocator.service
+
+
+
+    #### from ECR
+
+    # log in
+    aws configure
+
+    # Log into ECR
+        aws ecr get-login-password | docker login --username AWS --password-stdin 108871799768.dkr.ecr.us-east-1.amazonaws.com/wiki-rag
+    
+    #    <ECR-INSTANCE-ID>.dkr.ecr.us-east-1.amazonaws.com/wiki-rag
+    docker pull 108871799768.dkr.ecr.us-east-1.amazonaws.com/wiki-rag 
+
     nitro-cli build-enclave \
         --docker-uri 108871799768.dkr.ecr.us-east-1.amazonaws.com/wiki-rag:latest \
         --output-file rag-enclave.eif
 ```
 
 help info: https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html
+
+
+
+may need to make the memory bigger:
+
+`sudo vim /etc/nitro_enclaves/allocator.yaml`

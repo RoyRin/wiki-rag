@@ -4,8 +4,6 @@ from typing import Optional
 import uvicorn
 import base64
 #import faiss
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
 from pathlib import Path 
