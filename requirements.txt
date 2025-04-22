@@ -107,7 +107,7 @@ uvloop==0.21.0
 watchfiles==1.0.5
 wcwidth==0.2.13
 websockets==15.0.1
--e git+ssh://git@github.com/RoyRin/wiki-rag.git@56c3b085893c78e68d8a2684b97f893546fac56c#egg=wiki_rag&subdirectory=../../wiki-rag
+#-e git+ssh://git@github.com/RoyRin/wiki-rag.git@56c3b085893c78e68d8a2684b97f893546fac56c#egg=wiki_rag&subdirectory=../../wiki-rag
 wikiextractor==3.0.6
 yarl==1.19.0
 zstandard==0.23.0

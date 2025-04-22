@@ -19,16 +19,19 @@ RUN    apt-get install -y --fix-missing  \
     # Copy server code
 COPY README.md .
 COPY wiki_rag .
-COPY pyproject.toml .
-COPY poetry.lock .
+#COPY pyproject.toml .
+COPY requirements.txt .
 
-RUN pip install --upgrade pip && pip install .
+#COPY poetry.lock .
+
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Optional: Copy other files like FAISS index if needed
 
-COPY data /app/data/
+#COPY data /app/data/
+COPY data /home/ec2-user
 
-ENV FAISS_PATH=/app/data/
+ENV FAISS_PATH=/home/ec2-user
 
 # Expose port
 EXPOSE 8000
