@@ -2,7 +2,8 @@ import requests
 #from wiki_rag.rag_server import Query
 
 query = "What are the symptoms of diabetes?"
-response = requests.post("http://localhost:8000/rag", json={"encrypted_query": query})
+response = requests.post("http://localhost:8000/rag",
+                         json={"encrypted_query": query})
 
 print(response)
 for i, result in enumerate(response.json()["results"]):

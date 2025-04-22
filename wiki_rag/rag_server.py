@@ -6,12 +6,11 @@ import base64
 #import faiss
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
-from pathlib import Path 
+from pathlib import Path
 
 #from langchain.vectorstores import FAISS
-import faiss as FAISS # HACK for memory
-import sys 
-
+import faiss as FAISS  # HACK for memory
+import sys
 
 # 🔐 Symmetric encryption key (must be securely shared after attestation)
 AES_KEY = os.environ.get("RAG_AES_KEY")  # 256-bit key as base64
@@ -24,42 +23,51 @@ do_encryption = False
 # 🧠 Load tokenizer + model
 from langchain.embeddings import HuggingFaceEmbeddings
 
+
 class PromptedBGE(HuggingFaceEmbeddings):
+
     def embed_documents(self, texts):
-        return super().embed_documents([
-            f"Represent this document for retrieval: {t}" for t in texts
-        ])
+        return super().embed_documents(
+            [f"Represent this document for retrieval: {t}" for t in texts])
 
     def embed_query(self, text):
-        return super().embed_query(f"Represent this query for retrieval: {text}")
+        return super().embed_query(
+            f"Represent this query for retrieval: {text}")
+
+
 # BAAI_embedding = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en")
 
 BAAI_embedding = PromptedBGE(model_name="BAAI/bge-base-en")  # or bge-large-en
-
-
 
 # 📚 Load FAISS index (in-memory)
 # You'd load your document embeddings here
 
 ### LOAD RAG
 FAISS_PATH = Path("/Users/roy/data/wikipedia/hugging_face/wiki-rag")
-FAISS_PATH = FAISS_PATH/ "wiki_index__top_100000__2025-04-11"
+FAISS_PATH = FAISS_PATH / "wiki_index__top_100000__2025-04-11"
 FAISS_PATH = os.environ.get("FAISS_PATH", FAISS_PATH)
 print(f"FAISS_PATH {FAISS_PATH}")
+
+
 # 📚 Load FAISS index (path optionally provided via CLI)
 def load_vectorstore(faiss_path: Optional[str] = FAISS_PATH):
     if faiss_path is None:
-        default_FAISS_PATH = Path("/Users/roy/data/wikipedia/hugging_face/wiki-rag")
-        default_FAISS_PATH = default_FAISS_PATH/ "wiki_index__top_100000__2025-04-11"
+        default_FAISS_PATH = Path(
+            "/Users/roy/data/wikipedia/hugging_face/wiki-rag")
+        default_FAISS_PATH = default_FAISS_PATH / "wiki_index__top_100000__2025-04-11"
         faiss_path = default_FAISS_PATH
 
     else:
         faiss_path = Path(faiss_path)
     print(f"loaded vector store")
-    return FAISS.load_local(faiss_path, BAAI_embedding, allow_dangerous_deserialization=True)
+    return FAISS.load_local(faiss_path,
+                            BAAI_embedding,
+                            allow_dangerous_deserialization=True)
+
 
 # Will be set in main()
 vectorstore = load_vectorstore()
+
 
 # 🔒 Decrypt helper
 def decrypt_message(enc_b64: str, key: bytes) -> str:
@@ -68,6 +76,7 @@ def decrypt_message(enc_b64: str, key: bytes) -> str:
     aesgcm = AESGCM(key)
     return aesgcm.decrypt(nonce, ciphertext, None).decode()
 
+
 # 🔒 Encrypt helper
 def encrypt_message(message: str, key: bytes) -> str:
     aesgcm = AESGCM(key)
@@ -75,13 +84,15 @@ def encrypt_message(message: str, key: bytes) -> str:
     ciphertext = aesgcm.encrypt(nonce, message.encode(), None)
     return base64.b64encode(nonce + ciphertext).decode()
 
+
 # 🧾 Request schema
 class Query(BaseModel):
     encrypted_query: str
 
+
 @app.post("/rag")
 async def rag_endpoint(query: Query):
-    global  vectorstore
+    global vectorstore
     print(f"vectorstore {vectorstore}")
     if do_encryption:
         print("should not be called")
@@ -100,13 +111,13 @@ async def rag_endpoint(query: Query):
     return {"results": [encrypted_response]}
 
 
-
 @app.post("/test")
 async def rag_endpoint(query: Query):
-    global  vectorstore
-    
+    global vectorstore
+
     print(f"query {query}")
     return {"results": [vectorstore]}
+
 
 @app.post("/provision")
 async def provision_key(payload: dict):
@@ -123,11 +134,10 @@ def main():
     # Optional CLI arg: FAISS path
     faiss_arg = sys.argv[1] if len(sys.argv) > 1 else None
     vectorstore = load_vectorstore(faiss_arg)
-    print(f"vectorstore {vectorstore}") 
+    print(f"vectorstore {vectorstore}")
     uvicorn.run("rag_server:app", host="0.0.0.0", port=8000)
+
 
 if __name__ == "__main__":
     print("hello!")
     main()
-
-
