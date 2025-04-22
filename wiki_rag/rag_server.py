@@ -3,13 +3,10 @@ from pydantic import BaseModel
 from typing import Optional
 import uvicorn
 import base64
-#import faiss
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
 from pathlib import Path
-
-#from langchain.vectorstores import FAISS
-import faiss as FAISS  # HACK for memory
+import faiss 
 import sys
 
 # 🔐 Symmetric encryption key (must be securely shared after attestation)
@@ -60,7 +57,7 @@ def load_vectorstore(faiss_path: Optional[str] = FAISS_PATH):
     else:
         faiss_path = Path(faiss_path)
     print(f"loaded vector store")
-    return FAISS.load_local(faiss_path,
+    return faiss.load_local(faiss_path,
                             BAAI_embedding,
                             allow_dangerous_deserialization=True)
 

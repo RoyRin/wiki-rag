@@ -1,16 +1,17 @@
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from langchain.vectorstores import FAISS
-from langchain.docstore.document import Document
-from langchain.embeddings.base import Embeddings
 from typing import List
 import numpy as np
 from pathlib import Path
 import json
 import os
-from wiki_rag import wikipedia
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from langchain.docstore.document import Document
+from langchain.embeddings.base import Embeddings
+import faiss 
 from itertools import islice
 from typing import Iterator
+
+from wiki_rag import wikipedia
 
 
 def load_model(cache_dir=None):
@@ -78,7 +79,7 @@ def create_and_save_faiss_index(index_path: str, batch_size: int = 64):
         ]
 
         if vectorstore is None:
-            vectorstore = FAISS.from_documents(docs, embeddings)
+            vectorstore = faiss.from_documents(docs, embeddings)
         else:
             vectorstore.add_documents(docs)
 

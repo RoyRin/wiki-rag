@@ -151,3 +151,15 @@ Later:
 3. write a function that you give a text, and it returns the title, and then also queries wikipedia (either locally, or through HTTPS)
 4. a bit of code clean up due to hardcoding paths
 
+
+
+# File Structure:
+```
+wiki_rag
+├── __init__.py
+├── construct_faiss.py  - `Code to build FAISS from wikipedia (assumes local copy)`
+├── rag.py - `helper code to construct FAISS code`
+├── rag_server.py - `Give path to FAISS index, code to serve wikipedia entries 
+├── example_rag_client.py - `simple function to poll the rag_server, given that the server is running locally in a docker-container or on your machine`
+└── wikipedia.py - `helper code for interacting with a downloaded version of wikipedia`
+```

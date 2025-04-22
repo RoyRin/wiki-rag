@@ -1,32 +1,25 @@
-import wikipedia
-import transformers
-from pathlib import Path
-from transformers import AutoModelForCausalLM, AutoTokenizer
-
-transformers.utils.logging.set_verbosity(transformers.logging.CRITICAL)
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from langchain.vectorstores import FAISS
-from langchain.docstore.document import Document
-from langchain.embeddings.base import Embeddings
-from typing import List
-import numpy as np
-from pathlib import Path
 import json
 import os
-from wiki_rag import wikipedia
-from itertools import islice
-from typing import Iterator
-
-from wiki_rag import wikipedia
-from wiki_rag import rag
-import os
 from pathlib import Path
-
-import torch
-from transformers.utils import logging
+from typing import List, Iterator
 from tqdm import tqdm
+from itertools import islice
+import numpy as np
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from langchain.docstore.document import Document
+from langchain.embeddings.base import Embeddings
+import transformers
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers.utils import logging
+import faiss 
 
+import wikipedia
+from wiki_rag import wikipedia as rag_wikipedia
+from wiki_rag import rag
+
+
+transformers.utils.logging.set_verbosity(transformers.logging.CRITICAL)
 logging.set_verbosity_debug()
 
 # My personal cache directory
@@ -100,13 +93,13 @@ if __name__ == "__main__":
     output_f = asset_dir / 'english_pageviews.csv'
     stats_f = asset_dir / 'pageviews-20241201-000000'
     print(f"loading english df from {output_f}")
-    english_df = wikipedia.get_sorted_english_df(
+    english_df = rag_wikipedia.get_sorted_english_df(
         output_f, stats_f)  # output - where to output, stats_f base
 
     title_to_file_path_f_pkl = asset_dir / 'title_to_file_path.pkl'
     print(f"loading wiki index from {title_to_file_path_f_pkl}")
 
-    title_to_file_path = wikipedia.get_title_to_path_index(
+    title_to_file_path = rag_wikipedia.get_title_to_path_index(
         json_dir, title_to_file_path_f_pkl)
 
     buffer = []
@@ -119,8 +112,8 @@ if __name__ == "__main__":
             break
 
         title = row.page_title
-        clean_title_ = wikipedia.clean_title(title)
-        data = wikipedia.get_wiki_page(clean_title_, title_to_file_path)
+        clean_title_ = rag_wikipedia.clean_title(title)
+        data = rag_wikipedia.get_wiki_page(clean_title_, title_to_file_path)
         if data is None:
             continue
 
@@ -156,7 +149,7 @@ if __name__ == "__main__":
             if vectorstore is None:
                 print(f"len buffer - {len(buffer)}")
                 with torch.no_grad():
-                    vectorstore = FAISS.from_documents(buffer, BAAI_embedding)
+                    vectorstore = faiss.from_documents(buffer, BAAI_embedding)
             else:
                 vectorstore.add_documents(buffer)
             buffer.clear()
@@ -174,7 +167,7 @@ if __name__ == "__main__":
     if vectorstore is None:
         print(f"len buffer - {len(buffer)}")
         with torch.no_grad():
-            vectorstore = FAISS.from_documents(buffer, BAAI_embedding)
+            vectorstore = faiss.from_documents(buffer, BAAI_embedding)
     else:
         vectorstore.add_documents(buffer)
     buffer.clear()
