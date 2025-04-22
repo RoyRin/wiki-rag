@@ -3,4 +3,3 @@ uvicorn[standard]==0.29.0
 cryptography==42.0.5
 #langchain==0.1.14
 faiss-cpu==1.7.4
-

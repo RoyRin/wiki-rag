@@ -12,9 +12,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy code and install dependencies into a temp folder
+COPY wiki_rag .
+#RUN pip install --no-cache-dir .
 COPY requirements.txt .
+#COPY pyproject.toml README.md .
+
 RUN pip install --upgrade pip \
-    && pip install --no-cache-dir --prefix=/install -r requirements.txt
+   && pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Stage 2: Final runtime image
 FROM python:3.10-slim
@@ -25,6 +29,7 @@ ENV PYTHONUNBUFFERED=1
 # Copy only installed dependencies and minimal source
 COPY --from=builder /install /usr/local
 COPY README.md wiki_rag .
+
 
 # Copy FAISS data (note: this might be big—consider generating at runtime if possible)
 COPY data /home/ec2-user/data
