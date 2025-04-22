@@ -6,32 +6,29 @@ authors = ["Roy Rinberg <royrinberg@gmail.com>"]
 readme = "README.md"
 
 packages = [
-	{include = "wiki_rag"},
+    { include = "wiki_rag" },
 ]
 
 [tool.poetry.scripts]
 rag-server = "wiki_rag.rag_server:main"
 
-
 [tool.poetry.dependencies]
 python = "^3.10"
-pandas = "^2.2.3"
-torch = "^2.5.1"
-torchvision = "^0.20.1"
-transformers = {extras = ["torch"], version = "^4.47.1"}
-ipykernel = "^6.29.5"
-requests = "^2.32.3"
-langchain = "^0.3.23"
-sentence-transformers = "^4.0.2"
-faiss-cpu = "^1.10.0"
-wikiextractor = "^3.0.6"
-langchain-community = "^0.3.21"
-fastapi = "^0.115.12"
-uvicorn = {extras = ["standard"], version = "^0.34.1"}
-cryptography = "^44.0.2"
+fastapi = "^0.110.0"
+uvicorn = { extras = ["standard"], version = "^0.29.0" }
+cryptography = "^42.0.5"
+faiss-cpu = "^1.7.4"
 
-#faiss-gpu = "^1.7.2"
-
+# Optional/extra deps — uncomment if needed
+# langchain = "^0.3.23"
+# sentence-transformers = "^4.0.2"
+# pandas = "^2.2.3"
+# torch = "^2.5.1"
+# torchvision = "^0.20.1"
+# transformers = { extras = ["torch"], version = "^4.47.1" }
+# requests = "^2.32.3"
+# wikiextractor = "^3.0.6"
+# langchain-community = "^0.3.21"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
@@ -39,3 +36,4 @@ ipykernel = "^6.29.5"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+

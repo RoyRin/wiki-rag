@@ -148,12 +148,19 @@ Here is the code to run on the EC2 instance ( AWS linux AMI):
     nitro-cli build-enclave \
         --docker-uri 108871799768.dkr.ecr.us-east-1.amazonaws.com/wiki-rag:latest \
         --output-file rag-enclave.eif
+
+    itro-cli run-enclave   --cpu-count 2   --memory 1024   --enclave-cid 16   --eif-path rag-enclave.eif
+
+
 ```
 
 help info: https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html
 
 
-
 may need to make the memory bigger:
 
 `sudo vim /etc/nitro_enclaves/allocator.yaml`
+
+TODO: need to actually install `wiki_rag` into docker image!
+
+

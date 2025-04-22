@@ -7,7 +7,9 @@ import base64
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
 from pathlib import Path 
-from langchain.vectorstores import FAISS
+
+#from langchain.vectorstores import FAISS
+import faiss as FAISS # HACK for memory
 import sys 
 
 
