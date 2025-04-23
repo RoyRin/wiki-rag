@@ -153,7 +153,7 @@ Later:
 ```
 wiki_rag
 ├── __init__.py
-├── construct_faiss.py  - `Code to build FAISS from wikipedia (assumes local copy)`
+├── construct_faiss.py  - `Code to build FAISS from wikipedia (assumes local copy of wikipedia)`
 ├── rag.py - `helper code to construct FAISS code`
 ├── rag_server.py - `Give path to FAISS index, code to serve wikipedia entries 
 ├── example_rag_client.py - `simple function to poll the rag_server, given that the server is running locally in a docker-container or on your machine`
