@@ -12,53 +12,19 @@ from langchain.embeddings.base import Embeddings
 import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.utils import logging
-import faiss 
+import faiss
+
+import datetime
 
 import wikipedia
 from wiki_rag import wikipedia as rag_wikipedia
 from wiki_rag import rag
 
-
 transformers.utils.logging.set_verbosity(transformers.logging.CRITICAL)
 logging.set_verbosity_debug()
 
-# My personal cache directory
-cache_dir = Path('/n/netscratch/vadhan_lab/Lab/rrinberg/HF_cache')
-data_cache = Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia")
-
-if not cache_dir.exists():
-    cache_dir = None
-if not data_cache.exists():
-    data_cache = None
-
-os.environ["HF_HOME"] = str(cache_dir)
-os.environ["TRANSFORMERS_CACHE"] = str(cache_dir)
-os.environ["HF_DATASETS_CACHE"] = str(cache_dir)
-os.environ["HF_HUB_CACHE"] = str(cache_dir)
-
-# Load model
-
-print(f"cache_dir - {cache_dir}")
 device = 'cuda:0'
 dtype = torch.float32
-
-from langchain.embeddings import HuggingFaceEmbeddings
-
-
-class PromptedBGE(HuggingFaceEmbeddings):
-
-    def embed_documents(self, texts):
-        return super().embed_documents(
-            [f"Represent this document for retrieval: {t}" for t in texts])
-
-    def embed_query(self, text):
-        return super().embed_query(
-            f"Represent this query for retrieval: {text}")
-
-
-# BAAI_embedding = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en")
-
-BAAI_embedding = PromptedBGE(model_name="BAAI/bge-base-en")  # or bge-large-en
 
 
 # === Helper to batch an iterator ===
@@ -68,7 +34,23 @@ def batched(iterable: Iterator, batch_size: int):
         yield batch
 
 
-import datetime
+HOMEDIR = Path.home()
+# My personal cache directory
+cache_dir = Path('/n/netscratch/vadhan_lab/Lab/rrinberg/HF_cache')
+if cache_dir.exists():
+    os.environ["HF_HOME"] = str(cache_dir)
+    os.environ["TRANSFORMERS_CACHE"] = str(cache_dir)
+    os.environ["HF_DATASETS_CACHE"] = str(cache_dir)
+    os.environ["HF_HUB_CACHE"] = str(cache_dir)
+    # Load model
+
+data_cache = Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia")
+if not data_cache.exists():
+    data_cache = HOMEDIR
+
+data_json_dir = data_cache / 'json'
+
+asset_dir = HOMEDIR / 'code' / 'wiki-rag' / 'assets'
 
 if __name__ == "__main__":
     date_str = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -76,105 +58,31 @@ if __name__ == "__main__":
     import sys
     max_articles = int(sys.argv[1]) if len(sys.argv) > 1 else 2000
 
-    SAVE_PATH = Path(
-        f"/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia/faiss_index__top_{max_articles}__{date_str}"
-    )
+    SAVE_PATH = data_cache / f"faiss_index__top_{max_articles}__{date_str}"
 
     vectorstore = None
     counts = 0
 
     # get the top 1M articles
-    HOMEDIR = Path.home()
-    BASEDIR = HOMEDIR / 'code/wiki-rag'
-    asset_dir = BASEDIR / 'assets'
+    output_f = asset_dir / 'english_pageviews.csv'  # where to save DF of {title : page views}
+    raw_stats_f = asset_dir / 'pageviews-20241201-000000'
 
-    json_dir = data_cache / 'json'
-
-    output_f = asset_dir / 'english_pageviews.csv'
-    stats_f = asset_dir / 'pageviews-20241201-000000'
     print(f"loading english df from {output_f}")
     english_df = rag_wikipedia.get_sorted_english_df(
-        output_f, stats_f)  # output - where to output, stats_f base
+        output_f, raw_stats_f)  # output - where to output, stats_f base
 
     title_to_file_path_f_pkl = asset_dir / 'title_to_file_path.pkl'
     print(f"loading wiki index from {title_to_file_path_f_pkl}")
 
     title_to_file_path = rag_wikipedia.get_title_to_path_index(
-        json_dir, title_to_file_path_f_pkl)
+        data_json_dir, title_to_file_path_f_pkl)
 
-    buffer = []
-    batch_size = 10
+    embeddings = rag.PromptedBGE(model_name="BAAI/bge-base-en")
 
-    for i, row in enumerate(tqdm(english_df.itertuples(index=False))):
+    vectorstore = rag.construct_faiss(english_df,
+                                      title_to_file_path,
+                                      SAVE_PATH,
+                                      embeddings=embeddings,
+                                      max_articles=max_articles)
 
-        #print(f"Processing article {counts}: {d['title']}")
-        if i > int(max_articles):
-            break
-
-        title = row.page_title
-        clean_title_ = rag_wikipedia.clean_title(title)
-        data = rag_wikipedia.get_wiki_page(clean_title_, title_to_file_path)
-        if data is None:
-            continue
-
-        title = data['title']
-        url = data['url']
-        text = data['text']
-        id_ = data.get('id')
-
-        if len(text) < 100:
-            continue
-
-        counts += 1
-
-        if counts % 250 == 0:
-            print(f"Processed {counts} articles so far...")
-
-        text = text.strip()
-        # abstract is first 3 par
-        #abstract = "\n".join(text.split("\n")[:5]) # 1st paragraph only
-        abstract = text
-
-        doc = Document(page_content=abstract,
-                       metadata={
-                           "title": title,
-                           "ind": i,
-                           "url": url,
-                           "id": id_
-                       })
-
-        buffer.append(doc)
-
-        if len(buffer) >= batch_size:
-            if vectorstore is None:
-                print(f"len buffer - {len(buffer)}")
-                with torch.no_grad():
-                    vectorstore = faiss.from_documents(buffer, BAAI_embedding)
-            else:
-                vectorstore.add_documents(buffer)
-            buffer.clear()
-
-        if counts % 5000 == 0:
-            print(f"✅ FAISS index updated with {counts} articles.")
-            vectorstore.save_local(SAVE_PATH)
-            print(f"✅ FAISS index saved to {SAVE_PATH}")
-
-    # save
-    # print out how many
-    print(f"Total articles processed: {counts}")
-    print(f"entries in vectorstore: {vectorstore.index.ntotal}")
-    # clear the buffer
-    if vectorstore is None:
-        print(f"len buffer - {len(buffer)}")
-        with torch.no_grad():
-            vectorstore = faiss.from_documents(buffer, BAAI_embedding)
-    else:
-        vectorstore.add_documents(buffer)
-    buffer.clear()
-    if vectorstore:
-        vectorstore.save_local(SAVE_PATH)
-        print(f"✅ FAISS index saved to {SAVE_PATH}")
-    else:
-        print("⚠️ No documents were indexed.")
-
-    print("hello")
+    print("Done building FAISS vectorstore")

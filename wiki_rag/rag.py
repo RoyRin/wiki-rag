@@ -7,9 +7,10 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
-import faiss 
+import faiss
 from itertools import islice
 from typing import Iterator
+from tqdm import tqdm
 
 from wiki_rag import wikipedia
 
@@ -67,24 +68,107 @@ def batched(iterable: Iterator, batch_size: int):
         yield batch
 
 
-# === Create and save FAISS index in batches ===
-def create_and_save_faiss_index(index_path: str, batch_size: int = 64):
-    embeddings = ModelEmbeddings(model, tokenizer, device)
-    vectorstore = None
+import wikipedia
+from wiki_rag import wikipedia as rag_wikipedia
+from wiki_rag import rag
 
-    for batch in batched(get_wikipedia_articles(), batch_size):
-        docs = [
-            Document(page_content=abstract, metadata={"title": title})
-            for title, abstract in batch
-        ]
+from langchain.embeddings import HuggingFaceEmbeddings
 
-        if vectorstore is None:
-            vectorstore = faiss.from_documents(docs, embeddings)
-        else:
-            vectorstore.add_documents(docs)
 
+class PromptedBGE(HuggingFaceEmbeddings):
+
+    def embed_documents(self, texts):
+        return super().embed_documents(
+            [f"Represent this document for retrieval: {t}" for t in texts])
+
+    def embed_query(self, text):
+        return super().embed_query(
+            f"Represent this query for retrieval: {text}")
+
+
+# BAAI_embedding = HuggingFaceEmbeddings(model_name="BAAI/bge-large-en")
+
+
+def construct_faiss(
+    english_df,
+    title_to_file_path,
+    SAVE_PATH,
+    embeddings=PromptedBGE(model_name="BAAI/bge-base-en"),
+    max_articles=1_000_000,
+):
+
+    buffer = []
+    batch_size = 10
+
+    for i, row in enumerate(tqdm(english_df.itertuples(index=False))):
+
+        #print(f"Processing article {counts}: {d['title']}")
+        if i > int(max_articles):
+            break
+
+        title = row.page_title
+        clean_title_ = rag_wikipedia.clean_title(title)
+        data = rag_wikipedia.get_wiki_page(clean_title_, title_to_file_path)
+        if data is None:
+            continue
+
+        title = data['title']
+        url = data['url']
+        text = data['text']
+        id_ = data.get('id')
+
+        if len(text) < 100:
+            continue
+
+        counts += 1
+
+        if counts % 250 == 0:
+            print(f"Processed {counts} articles so far...")
+
+        text = text.strip()
+        # abstract is first 3 par
+        #abstract = "\n".join(text.split("\n")[:5]) # 1st paragraph only
+        abstract = text
+
+        doc = Document(page_content=abstract,
+                       metadata={
+                           "title": title,
+                           "ind": i,
+                           "url": url,
+                           "id": id_
+                       })
+
+        buffer.append(doc)
+
+        if len(buffer) >= batch_size:
+            if vectorstore is None:
+                print(f"len buffer - {len(buffer)}")
+                with torch.no_grad():
+                    vectorstore = faiss.from_documents(buffer, embeddings)
+            else:
+                vectorstore.add_documents(buffer)
+            buffer.clear()
+
+        if counts % 5000 == 0:
+            print(f"✅ FAISS index updated with {counts} articles.")
+            vectorstore.save_local(SAVE_PATH)
+            print(f"✅ FAISS index saved to {SAVE_PATH}")
+
+    # save
+    print(f"Total articles processed: {counts}")
+    print(f"entries in vectorstore: {vectorstore.index.ntotal}")
+    # clear the buffer
+    if vectorstore is None:
+        print(f"len buffer - {len(buffer)}")
+        with torch.no_grad():
+            vectorstore = faiss.from_documents(buffer, embeddings)
+    else:
+        vectorstore.add_documents(buffer)
+    buffer.clear()
     if vectorstore:
-        vectorstore.save_local(index_path)
-        print(f"✅ FAISS index saved to {index_path}")
+        vectorstore.save_local(SAVE_PATH)
+        print(f"✅ FAISS index saved to {SAVE_PATH}")
     else:
         print("⚠️ No documents were indexed.")
+
+    return vectorstore

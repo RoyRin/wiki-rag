@@ -66,10 +66,10 @@ def get_wiki_page(title, title_to_file_path):
     return json.loads(data)
 
 
-def get_sorted_english_df(output_f, stats_f=None):
+def get_sorted_english_df(output_f, raw_stats_f=None):
     # Replace 'filename.txt' with your actual file path
 
-    if not output_f.exists() and stats_f is not None:
+    if not output_f.exists() and raw_stats_f is not None:
         """
         Example from stats file:
         project page_title views bytes
@@ -79,7 +79,7 @@ def get_sorted_english_df(output_f, stats_f=None):
         en Fertiliser 1 0
         en.m Fertilisers_and_Chemicals_Travancore 1 0
         """
-        df = pd.read_csv(stats_f,
+        df = pd.read_csv(raw_stats_f,
                          sep=' ',
                          header=None,
                          names=['project', 'page_title', 'views', 'bytes'])

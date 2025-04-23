@@ -6,7 +6,7 @@ import base64
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
 from pathlib import Path
-import faiss 
+import faiss
 import sys
 
 # 🔐 Symmetric encryption key (must be securely shared after attestation)
