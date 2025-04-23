@@ -9,9 +9,7 @@ import pandas as pd
 import json
 import pickle
 
-# HACK - hard coded to my own addresses!
-default_cache_dir = Path('/n/netscratch/vadhan_lab/Lab/rrinberg/HF_cache')
-data_cache = Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia")
+
 
 
 def save_json(d, filepath):
@@ -25,6 +23,25 @@ def save_pickle(d, filepath):
 
 
 def get_title_to_path_index(json_dir, title_to_file_path_f_pkl):
+    """extract dictionary that maps {title: (path , line-number )}
+    assumes that the data is contained in the wiki-extractor json format,
+
+        ├── AA
+        │   ├── wiki_00
+        │   ├── wiki_01
+            ...
+        └── AB
+            ├── wiki_00
+            ├── wiki_01
+            ...
+        where `wiki_*` is a file where each line is a JSON.dumps dictionary for a wikipedia article
+    Args:
+        json_dir (_type_): path to wikipedia in json format
+        title_to_file_path_f_pkl (_type_): where to save the {title: (file-path, line-number)} dict
+
+    Returns:
+        title_to_file_path
+    """
     jsons_ = list(json_dir.glob('**/wiki_*'))
 
     if title_to_file_path_f_pkl.exists():
@@ -205,18 +222,6 @@ def build_title_index(path_to_extracted_dir):
                     offset = f.tell()
     return index
 
-
-def get_article_local(title, local_dir=None):
-    # Call Wiki Extractor
-    if local_dir is None:
-        local_dir = data_cache
-
-    index = build_title_index(local_dir)
-    if title not in index:
-        return None
-    full_path, offset = index[title]
-
-    pass
 
 
 def get_article_remote(title, abstract_only=False):
