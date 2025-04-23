@@ -15,7 +15,6 @@
 module load python/3.10.12-fasrc01
 module load intelpython/3.9.16-fasrc01
 #module load cuda cudnn
-
 mamba activate unlearning_3.10
 
 
@@ -27,6 +26,5 @@ CODE_DIR=/n/home04/rrinberg/code/wiki-rag
 ## Run the experiment
 cd $DATA_DIR
 
-wikiextractor --output text enwiki-latest-pages-articles.xml.bz2
-
-#wikiextractor --output json --json enwiki-latest-pages-articles.xml.bz2 
+#wikiextractor --output text enwiki-latest-pages-articles.xml.bz2
+wikiextractor --output json --json enwiki-latest-pages-articles.xml.bz2 
