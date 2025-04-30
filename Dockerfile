@@ -1,51 +1,43 @@
 # Stage 1: Build layer
 FROM python:3.10-slim as builder
 
-WORKDIR /app
+WORKDIR /app/code
 
 # Avoid Python buffering logs
 ENV PYTHONUNBUFFERED=1
 
-# Install only what's needed for pip
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy code and install dependencies into a temp folder
-COPY wiki_rag .
-#RUN pip install --no-cache-dir .
-COPY requirements.txt .
-COPY pyproject.toml README.md .
-
-#RUN pip install --upgrade pip \
-#   && pip install --no-cache-dir --prefix=/install -r requirements.txt
+# Install Python dependencies
+COPY pyproject.toml README.md ./
+COPY wiki_rag ./wiki_rag
 
 RUN pip install --upgrade pip \
-    && pip install -e .
+    && pip install --prefix=/install .
 
 ##
 # Stage 2: Final runtime image
 ##
-
 FROM python:3.10-slim
 
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 
-# Copy only installed dependencies and minimal source
+# Copy dependencies and minimal installed packages from builder
 COPY --from=builder /install /usr/local
-COPY README.md wiki_rag .
 
+# Copy essential runtime files
+COPY README.md ./README.md
+COPY wiki_rag ./wiki_rag
 
-# Copy FAISS data (note: this might be big—consider generating at runtime if possible)
+# Copy FAISS data (make sure this path exists and is correctly set up)
 COPY data /home/ec2-user/data
-
 ENV FAISS_PATH=/home/ec2-user/data
 
 EXPOSE 8000
 
-# Define entrypoint or CMD here if needed, e.g.
-# CMD ["python", "wiki_rag/server.py"]
+# Run the application
 CMD ["uvicorn", "wiki_rag.rag_server:app", "--host", "0.0.0.0", "--port", "8000"]
-
-
