@@ -6,7 +6,8 @@ import base64
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
 from pathlib import Path
-import faiss
+#import faiss
+from langchain_community.vectorstores import FAISS
 import sys
 
 # 🔐 Symmetric encryption key (must be securely shared after attestation)
@@ -40,26 +41,29 @@ BAAI_embedding = PromptedBGE(model_name="BAAI/bge-base-en")  # or bge-large-en
 # You'd load your document embeddings here
 
 ### LOAD RAG
-FAISS_PATH = Path("/Users/roy/data/wikipedia/hugging_face/wiki-rag")
-FAISS_PATH = FAISS_PATH / "wiki_index__top_100000__2025-04-11"
+FAISS_PATH = Path("/Users/roy/data/wikipedia/hugging_face/")
+FAISS_PATH = FAISS_PATH / "faiss_index__top_100000__2025-04-11"
 FAISS_PATH = os.environ.get("FAISS_PATH", FAISS_PATH)
 print(f"FAISS_PATH {FAISS_PATH}")
 
 
 # 📚 Load FAISS index (path optionally provided via CLI)
 def load_vectorstore(faiss_path: Optional[str] = FAISS_PATH):
+    """ adjusts global vectorstore variable """
+    global vectorstore
     if faiss_path is None:
         default_FAISS_PATH = Path(
-            "/Users/roy/data/wikipedia/hugging_face/wiki-rag")
+            "/Users/roy/data/wikipedia/hugging_face")
         default_FAISS_PATH = default_FAISS_PATH / "wiki_index__top_100000__2025-04-11"
         faiss_path = default_FAISS_PATH
 
     else:
         faiss_path = Path(faiss_path)
     print(f"loaded vector store")
-    return faiss.load_local(faiss_path,
+    vectorstore= FAISS.load_local(faiss_path,
                             BAAI_embedding,
                             allow_dangerous_deserialization=True)
+    return vectorstore
 
 
 # Will be set in main()
@@ -127,7 +131,6 @@ async def provision_key(payload: dict):
 def main():
     import uvicorn
     global vectorstore
-
     # Optional CLI arg: FAISS path
     faiss_arg = sys.argv[1] if len(sys.argv) > 1 else None
     vectorstore = load_vectorstore(faiss_arg)

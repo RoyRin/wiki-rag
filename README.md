@@ -142,7 +142,7 @@ wiki_rag
 
 
 # TODO (setting up TEE)
-1. need to actually install `wiki_rag` into docker image!
+
 2. Run server through Enclave
 3. Figure out if you can can mount memory onto the enclave (does this still make sense?), rather than putting entire RAG into TEE (store memory in AWS EC2 and mount it into the RAG).
 4. set up docker image to mount server.

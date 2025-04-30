@@ -18,9 +18,11 @@ fastapi = "^0.110.0"
 uvicorn = { extras = ["standard"], version = "^0.29.0" }
 cryptography = "^42.0.5"
 faiss-cpu = "^1.7.4"
+#langchain = "^0.3.23"
+
 
 # Optional/extra deps — uncomment if needed
-# langchain = "^0.3.23"
+# 
 # sentence-transformers = "^4.0.2"
 # pandas = "^2.2.3"
 # torch = "^2.5.1"
@@ -29,6 +31,8 @@ faiss-cpu = "^1.7.4"
 # requests = "^2.32.3"
 # wikiextractor = "^3.0.6"
 # langchain-community = "^0.3.21"
+langchain-community = "^0.3.23"
+sentence-transformers = "^4.1.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
