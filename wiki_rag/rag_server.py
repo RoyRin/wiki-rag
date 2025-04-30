@@ -7,7 +7,6 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
 from pathlib import Path
 #import faiss
-from langchain_community.vectorstores import FAISS
 import sys
 
 # 🔐 Symmetric encryption key (must be securely shared after attestation)
@@ -19,6 +18,7 @@ app = FastAPI()
 do_encryption = False
 
 # 🧠 Load tokenizer + model
+from langchain_community.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 
 
