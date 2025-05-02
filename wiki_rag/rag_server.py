@@ -9,6 +9,7 @@ from pathlib import Path
 #import faiss
 from langchain_community.vectorstores import FAISS
 import sys
+import uvicorn
 
 # 🔐 Symmetric encryption key (must be securely shared after attestation)
 AES_KEY = os.environ.get("RAG_AES_KEY")  # 256-bit key as base64
@@ -95,8 +96,8 @@ class Query(BaseModel):
 async def rag_endpoint(query: Query):
     global vectorstore
     print(f"vectorstore {vectorstore}")
+
     if do_encryption:
-        print("should not be called")
         key = base64.b64decode(AES_KEY)
         user_query = decrypt_message(query.encrypted_query, key)
     else:
@@ -129,7 +130,6 @@ async def provision_key(payload: dict):
 
 
 def main():
-    import uvicorn
     global vectorstore
     # Optional CLI arg: FAISS path
     faiss_arg = sys.argv[1] if len(sys.argv) > 1 else None
