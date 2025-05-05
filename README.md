@@ -161,3 +161,9 @@ Later:
 
 # TODO (setting up PathORAM)
 2. run PathORAM for database querying
+
+
+
+# Misc:
+
+RAG servers by default return `page.content` that can take up a lot of space. I provide `remove_faiss_metadata.py` to remove this extra content, if you just want the title of the page returned.
