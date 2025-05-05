@@ -167,3 +167,32 @@ Later:
 # Misc:
 
 RAG servers by default return `page.content` that can take up a lot of space. I provide `remove_faiss_metadata.py` to remove this extra content, if you just want the title of the page returned.
+
+
+
+# Quick Download of wiki-rag RAG:
+(from `https://huggingface.co/datasets/royrin/KLOM-models/tree/main`)
+```
+#!/bin/bash
+
+REPO="royrin/wiki-rag"
+FOLDER="faiss_index__top_100000__2025-04-11__title_only"
+
+# Get list of all files in the repo
+FILES=$(curl -s https://huggingface.co/api/models/$REPO | jq -r '.siblings[].rfilename')
+
+# Filter files in the target folder
+FILES_TO_DOWNLOAD=$(echo "$FILES" | grep "^$FOLDER/")
+
+# Create local folder
+mkdir -p $FOLDER
+cd $FOLDER
+
+# Download each file
+for FILE in $FILES_TO_DOWNLOAD; do
+    echo "Downloading $FILE"
+    mkdir -p "$(dirname "$FILE")"
+    curl -L -o "$FILE" "https://huggingface.co/$REPO/resolve/main/$FILE"
+done
+
+```
