@@ -34,8 +34,8 @@ COPY README.md ./README.md
 COPY wiki_rag ./wiki_rag
 
 # Copy FAISS data (make sure this path exists and is correctly set up)
-COPY data /home/ec2-user/data
-ENV FAISS_PATH=/home/ec2-user/data
+COPY data /app/data
+ENV FAISS_PATH=/app/data
 
 EXPOSE 8000
 
