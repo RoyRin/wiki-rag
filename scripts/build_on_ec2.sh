@@ -3,10 +3,14 @@ set -x
 CWD=`pwd`
 
 BASE_DIR=${HOME}/code/wiki-rag/
-#/home/ec2-user/code/wiki-rag/
 
-echo $CWD
+# Use first command-line argument as docker_type, default to "python"
+docker_type=${1:-python}
 
-echo $BASE_DIR
+DOCKERFILE=${BASE_DIR}/dockerfiles/dockerfile.${docker_type}
 
-docker build -t wiki-rag-tiny $BASE_DIR
+echo "Working directory: $CWD"
+echo "Base directory: $BASE_DIR"
+echo "Using Dockerfile: $DOCKERFILE"
+
+docker build -f "$DOCKERFILE" -t wiki-rag-tiny "$BASE_DIR"

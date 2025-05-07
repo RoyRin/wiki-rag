@@ -12,6 +12,22 @@ I've uploaded the wikipedia RAG to HuggingFace for public consumption, here: htt
 ## Notes about embedding:
 The RAG is generated using embeddings on each Wikipedia page *in its entirety*; I experimented with embedding smaller parts of hte page and anecodotally found that this returns poorer results. 
 
+## Quick Start:
+To run locally, you can run `python wiki_rag/rag_server_api.py`, and then can test it out by calling `rag_server_client.py`.
+
+### Docker Build + Run
+Build image, for application
+```
+    ./scripts/build.sh python # build docker image 
+    ./scripts/build.sh tee # build docker image specific for running in a TEE 
+```
+
+then to run the application
+```
+    ./scripts/run.sh # this just calls Docker run, with port 8000 open
+```
+
+
 
 ## High-level outline of how this repo was made:
 
@@ -43,6 +59,57 @@ The RAG is generated using embeddings on each Wikipedia page *in its entirety*; 
 4. quick starting on AWS Nitro `https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html`.
 
 
+# File Structure:
+```
+wiki_rag
+├── __init__.py
+├── construct_faiss.py  - `Code to build FAISS from wikipedia (assumes local copy of wikipedia)`
+├── rag.py - `helper code to construct FAISS code`
+├── rag_server.py - `Give path to FAISS index, code to serve wikipedia entries 
+├── example_rag_client.py - `simple function to poll the rag_server, given that the server is running locally in a docker-container or on your machine`
+└── wikipedia.py - `helper code for interacting with a downloaded version of wikipedia`
+```
+
+
+# Misc:
+
+RAG servers by default return `page.content` that can take up a lot of space. I provide `remove_faiss_metadata.py` to remove this extra content, if you just want the title of the page returned.
+
+
+
+# Quick Download of wiki-rag RAG:
+(from `https://huggingface.co/datasets/royrin/KLOM-models/tree/main`)
+```
+#!/bin/bash
+
+REPO="royrin/wiki-rag"
+FOLDER="faiss_index__top_100000__2025-04-11__title_only"
+
+# Get list of all files in the repo
+FILES=$(curl -s https://huggingface.co/api/models/$REPO | jq -r '.siblings[].rfilename')
+
+# Filter files in the target folder
+FILES_TO_DOWNLOAD=$(echo "$FILES" | grep "^$FOLDER/")
+
+# Create local folder
+mkdir -p $FOLDER
+cd $FOLDER
+
+# Download each file
+for FILE in $FILES_TO_DOWNLOAD; do
+    echo "Downloading $FILE"
+    mkdir -p "$(dirname "$FILE")"
+    curl -L -o "$FILE" "https://huggingface.co/$REPO/resolve/main/$FILE"
+done
+
+```
+
+# Docker and Images
+`Dockerfiles/Dockerfile.app` stores the dockerfile for the uvicorn API based RAG server
+
+
+
+
 # RAGs in TEEs (AWS nitro):
 TEEs (Trusted Execution Environments) are hardware enabled execution environments for running software. AWS provides tooling to run your own TEEs through a system called **AWS Nitro**.
 
@@ -53,10 +120,32 @@ You can run AWS nitro from a regular EC2 instance (though not every EC2 instance
 1. `console`
 1. `terminate-enclave`
 
-In the rest of this readme (and in this codebase)
 
-# Setting up a TEE for *private* RAG:
-Now, AWS Nitro can be somewhat difficult to set up, so here I describe the process of setting up an AWS-Nitro backed EC2 instance. 
+We include `enclave_example` as code for helping someone get spun up on running *an* image inside of a TEE.
+```
+.
+├── enclave-server
+│   ├── Dockerfile           # Defines the enclave server environment
+│   ├── build_docker.sh      # Builds the Docker image
+│   ├── build_eif.sh         # Converts the Docker image to a .eif file
+│   ├── enclave_config.json  # Configuration file for the enclave
+│   ├── run_eif.sh           # Launches the enclave using Nitro CLI
+│   └── server.py            # A simple server that listens over vsock
+└── parent-client
+    └── client.py            # Client to query the enclave server
+
+```
+This is simple code to do:
+
+1. Runs a Python server that listens over vsock (the communication interface within a Nitro Enclave).
+2. Builds a Docker image (based on Amazon Linux 2) that contains this server.
+3. Converts the Docker image into a Nitro Enclave Image File (.eif).
+4. Launches the enclave image on your EC2 instance using the Nitro CLI.
+5. Provides a simple client (client.py) that you can run with python client.py to send a request to the server running inside the enclave.
+
+
+## Setting up a TEE for *private* RAG:
+Now, AWS Nitro can be somewhat difficult to set up, so here I describe the process of setting up an AWS-Nitro backed EC2 instance. (For example, it seems crucial to build a docker image from `AmazonLinux` even though the documentation does not say this).
 
 As a loose outline, one needs to do the following steps:
 1. connect to Nitro-backed EC2 instance.
@@ -129,73 +218,4 @@ Once you have SSH-ed into the machine, here is the code to run on the EC2 instan
     nitro-cli run-enclave   --cpu-count 2   --memory 1024   --enclave-cid 16   --eif-path rag-enclave.eif
 ```
 
-# File Structure:
-```
-wiki_rag
-├── __init__.py
-├── construct_faiss.py  - `Code to build FAISS from wikipedia (assumes local copy of wikipedia)`
-├── rag.py - `helper code to construct FAISS code`
-├── rag_server.py - `Give path to FAISS index, code to serve wikipedia entries 
-├── example_rag_client.py - `simple function to poll the rag_server, given that the server is running locally in a docker-container or on your machine`
-└── wikipedia.py - `helper code for interacting with a downloaded version of wikipedia`
-```
 
-
-# TODO (setting up TEE)
-1. remove dependence on `sentence-embeddings` and on `langchain` - so that the docker image is small! 
-2. Run server through Enclave
-3. Figure out if you can can mount memory onto the enclave (does this still make sense?), rather than putting entire RAG into TEE (store memory in AWS EC2 and mount it into the RAG).
-4. set up docker image to mount server.
-
-Later:
-1. do profiling of RAG system in TEE vs outside of TEE
-
-
-# TODO (for making it a nice package)
-2. For RAG, push the store to GPU for speed
-    ```
-        cpu_index = faiss.read_index(str(faiss_path))
-        res = faiss.StandardGpuResources()
-        gpu_index = faiss.index_cpu_to_gpu(res, 0, cpu_index)
-    ```
-
-# TODO (setting up PathORAM)
-2. run PathORAM for database querying
-
-
-
-# Misc:
-
-RAG servers by default return `page.content` that can take up a lot of space. I provide `remove_faiss_metadata.py` to remove this extra content, if you just want the title of the page returned.
-
-
-
-# Quick Download of wiki-rag RAG:
-(from `https://huggingface.co/datasets/royrin/KLOM-models/tree/main`)
-```
-#!/bin/bash
-
-REPO="royrin/wiki-rag"
-FOLDER="faiss_index__top_100000__2025-04-11__title_only"
-
-# Get list of all files in the repo
-FILES=$(curl -s https://huggingface.co/api/models/$REPO | jq -r '.siblings[].rfilename')
-
-# Filter files in the target folder
-FILES_TO_DOWNLOAD=$(echo "$FILES" | grep "^$FOLDER/")
-
-# Create local folder
-mkdir -p $FOLDER
-cd $FOLDER
-
-# Download each file
-for FILE in $FILES_TO_DOWNLOAD; do
-    echo "Downloading $FILE"
-    mkdir -p "$(dirname "$FILE")"
-    curl -L -o "$FILE" "https://huggingface.co/$REPO/resolve/main/$FILE"
-done
-
-```
-
-# Docker and Images
-`Dockerfiles/Dockerfile.app` stores the dockerfile for the uvicorn API based RAG server

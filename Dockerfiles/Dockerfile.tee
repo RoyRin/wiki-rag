@@ -23,3 +23,20 @@ ENV PATH="/usr/local/bin:${PATH}"
 COPY pyproject.toml README.md ./
 COPY wiki_rag ./wiki_rag
 
+RUN python3.9 -m pip install .
+
+# --upgrade pip \ && python3.9 -m pip install --prefix=/usr/local .
+
+
+# Copy essential runtime files
+COPY README.md ./README.md
+COPY wiki_rag ./wiki_rag
+
+# Copy FAISS data (make sure this path exists and is correctly set up)
+COPY data /app/data
+ENV FAISS_PATH=/app/data
+
+EXPOSE 8000
+
+# Run the application
+CMD ["python", "wiki_rag.rag_server_socket", "--host", "0.0.0.0", "--port", "8000"]
