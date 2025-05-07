@@ -13,16 +13,17 @@ packages = [
 rag-server = "wiki_rag.rag_server:main"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 fastapi = "^0.110.0"
 uvicorn = { extras = ["standard"], version = "^0.29.0" }
 cryptography = "^42.0.5"
 faiss-cpu = "^1.7.4"
-#langchain = "^0.3.23"
+langchain-community = "^0.3.23"
+sentence-transformers = "^4.1.0"
+
 
 
 # Optional/extra deps — uncomment if needed
-# 
 # sentence-transformers = "^4.0.2"
 # pandas = "^2.2.3"
 # torch = "^2.5.1"
@@ -30,9 +31,6 @@ faiss-cpu = "^1.7.4"
 # transformers = { extras = ["torch"], version = "^4.47.1" }
 # requests = "^2.32.3"
 # wikiextractor = "^3.0.6"
-# langchain-community = "^0.3.21"
-langchain-community = "^0.3.23"
-sentence-transformers = "^4.1.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
