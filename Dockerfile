@@ -1,43 +1,25 @@
-# Stage 1: Build layer
-FROM python:3.10-slim as builder
+FROM amazonlinux:2
 
-WORKDIR /app/code
+# Install essential build dependencies
+RUN yum update -y && \
+    yum install -y gcc openssl-devel bzip2-devel libffi-devel zlib-devel wget make tar gzip && \
+    yum clean all
 
-# Avoid Python buffering logs
-ENV PYTHONUNBUFFERED=1
+# Download and build Python 3.9
+WORKDIR /usr/src
+RUN wget https://www.python.org/ftp/python/3.9.19/Python-3.9.19.tgz && \
+    tar xzf Python-3.9.19.tgz
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /usr/src/Python-3.9.19
+RUN ./configure --enable-optimizations && \
+    make altinstall
+
+# Set Python path
+ENV PATH="/usr/local/bin:${PATH}"
+
+
 
 # Install Python dependencies
 COPY pyproject.toml README.md ./
 COPY wiki_rag ./wiki_rag
 
-RUN pip install --upgrade pip \
-    && pip install --prefix=/install .
-
-##
-# Stage 2: Final runtime image
-##
-FROM python:3.10-slim
-
-WORKDIR /app
-ENV PYTHONUNBUFFERED=1
-
-# Copy dependencies and minimal installed packages from builder
-COPY --from=builder /install /usr/local
-
-# Copy essential runtime files
-COPY README.md ./README.md
-COPY wiki_rag ./wiki_rag
-
-# Copy FAISS data (make sure this path exists and is correctly set up)
-COPY data /app/data
-ENV FAISS_PATH=/app/data
-
-EXPOSE 8000
-
-# Run the application
-CMD ["uvicorn", "wiki_rag.rag_server:app", "--host", "0.0.0.0", "--port", "8000"]

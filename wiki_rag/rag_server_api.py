@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 #import faiss
 import sys
+import uvicorn
 
 # 🔐 Symmetric encryption key (must be securely shared after attestation)
 AES_KEY = os.environ.get("RAG_AES_KEY")  # 256-bit key as base64
@@ -129,7 +130,6 @@ async def provision_key(payload: dict):
 
 
 def main():
-    import uvicorn
     global vectorstore
     # Optional CLI arg: FAISS path
     faiss_arg = sys.argv[1] if len(sys.argv) > 1 else None

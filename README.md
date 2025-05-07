@@ -196,3 +196,6 @@ for FILE in $FILES_TO_DOWNLOAD; do
 done
 
 ```
+
+# Docker and Images
+`Dockerfiles/Dockerfile.app` stores the dockerfile for the uvicorn API based RAG server

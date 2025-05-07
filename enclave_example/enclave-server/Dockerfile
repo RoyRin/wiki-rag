@@ -1,11 +1,10 @@
-FROM python:3.10  
-# Note: NOT slim
+FROM amazonlinux:2
+
+# Install Python 3 & pip
+RUN yum install -y python3 python3-pip \
+ && yum clean all
 
 WORKDIR /app
 COPY server.py .
 
-RUN python --version && which python
-RUN pip install --no-cache-dir --upgrade pip
-
-ENTRYPOINT ["python", "server.py"]
-
+ENTRYPOINT ["python3", "/app/server.py"]
