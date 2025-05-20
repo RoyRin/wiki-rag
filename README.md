@@ -108,7 +108,14 @@ done
 `Dockerfiles/Dockerfile.app` stores the dockerfile for the uvicorn API based RAG server
 
 
+# Contextualizing Scores and numbers!
 
+Here are what the distribution of scores can look like:
+![rag_query_scores_2025-05-20_11-26-47](https://github.com/user-attachments/assets/f4cbc95c-2c14-4825-ab38-9143c3f4ef0b)
+
+And here's an annotated version for responses associated with "Synthetic Biology"
+![annontated_rag_query_scores_2025-05-20_11-26-47](https://github.com/user-attachments/assets/bdf7ba67-48ee-4a4f-af61-45e9b12fabc4)
+(if you are wondering what DAVID is, it is this: https://en.wikipedia.org/wiki/DAVID; "DAVID (the database for annotation, visualization and integrated discovery) is a free online bioinformatics resource developed by the Laboratory of Human Retrovirology and Immunoinformatics")
 
 # RAGs in TEEs (AWS nitro):
 TEEs (Trusted Execution Environments) are hardware enabled execution environments for running software. AWS provides tooling to run your own TEEs through a system called **AWS Nitro**.
