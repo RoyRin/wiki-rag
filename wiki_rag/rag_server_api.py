@@ -53,17 +53,16 @@ def load_vectorstore(faiss_path: Optional[str] = FAISS_PATH):
     """ adjusts global vectorstore variable """
     global vectorstore
     if faiss_path is None:
-        default_FAISS_PATH = Path(
-            "/Users/roy/data/wikipedia/hugging_face")
+        default_FAISS_PATH = Path("/Users/roy/data/wikipedia/hugging_face")
         default_FAISS_PATH = default_FAISS_PATH / "wiki_index__top_100000__2025-04-11"
         faiss_path = default_FAISS_PATH
 
     else:
         faiss_path = Path(faiss_path)
     print(f"loaded vector store")
-    vectorstore= FAISS.load_local(faiss_path,
-                            BAAI_embedding,
-                            allow_dangerous_deserialization=True)
+    vectorstore = FAISS.load_local(faiss_path,
+                                   BAAI_embedding,
+                                   allow_dangerous_deserialization=True)
     return vectorstore
 
 

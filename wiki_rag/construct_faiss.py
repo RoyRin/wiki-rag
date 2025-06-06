@@ -48,8 +48,6 @@ data_cache = Path("/n/netscratch/vadhan_lab/Lab/rrinberg/wikipedia")
 if not data_cache.exists():
     data_cache = HOMEDIR
 
-
-
 if __name__ == "__main__":
     date_str = datetime.datetime.now().strftime("%Y-%m-%d")
     help_information = """
@@ -62,11 +60,11 @@ if __name__ == "__main__":
     # default location for page-view count information
     wiki_view_count_data_dir = HOMEDIR / 'code' / 'wiki-rag' / 'assets'
 
-
     import sys
     max_articles = int(sys.argv[1]) if len(sys.argv) > 1 else 2000
     data_cache = sys.argv[2] if len(sys.argv) > 2 else data_cache
-    wiki_view_count_data_dir = sys.argv[3] if len(sys.argv) > 3 else wiki_view_count_data_dir
+    wiki_view_count_data_dir = sys.argv[3] if len(
+        sys.argv) > 3 else wiki_view_count_data_dir
 
     data_json_dir = data_cache / 'json'
 

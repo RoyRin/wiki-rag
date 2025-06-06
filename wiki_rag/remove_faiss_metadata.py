@@ -12,7 +12,7 @@ if isinstance(data, tuple):
     print(f"Loaded tuple of length {len(data)}")
     for i, item in enumerate(data):
         print(f"Item {i}: type={type(item)}")
-    
+
     # Try to find the InMemoryDocstore in the tuple
     for obj in data:
         if hasattr(obj, "_dict") or hasattr(obj, "dict"):

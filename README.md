@@ -121,3 +121,10 @@ And here's an annotated version for responses associated with "Synthetic Biology
 TEEs (Trusted Execution Environments) are hardware enabled execution environments for running software. AWS provides tooling to run your own TEEs through a system called **AWS Nitro**.
 
 See branch `rr/enclave-rag` for how to set up this RAG to run within an AWS nitro instance.
+
+
+# Contributing
+
+To set up git hooks properly, please run
+`git config core.hooksPath .githooks`
+(once). This will enable hooks such as running `yapf` on all python files

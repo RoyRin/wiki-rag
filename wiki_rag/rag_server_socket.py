@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel
 from typing import Optional
 
@@ -14,8 +13,8 @@ from typing import Any
 from langchain_community.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 
-
 VSOCK_PORT = 5000
+
 
 class PromptedBGE(HuggingFaceEmbeddings):
 
@@ -43,33 +42,34 @@ def load_vectorstore(faiss_path: Optional[str] = FAISS_PATH):
     """ adjusts global vectorstore variable """
     global vectorstore
     if faiss_path is None:
-        default_FAISS_PATH = Path(
-            "/Users/roy/data/wikipedia/hugging_face")
+        default_FAISS_PATH = Path("/Users/roy/data/wikipedia/hugging_face")
         default_FAISS_PATH = default_FAISS_PATH / "wiki_index__top_100000__2025-04-11"
         faiss_path = default_FAISS_PATH
 
     else:
         faiss_path = Path(faiss_path)
     print(f"loaded vector store")
-    vectorstore= FAISS.load_local(faiss_path,
-                            BAAI_embedding,
-                            allow_dangerous_deserialization=True)
+    vectorstore = FAISS.load_local(faiss_path,
+                                   BAAI_embedding,
+                                   allow_dangerous_deserialization=True)
     return vectorstore
 
 
 # Will be set in main()
 vectorstore = load_vectorstore()
 
+
 # 🧾 Request schema
 class Query(BaseModel):
     encrypted_query: str
+
 
 # Handle incoming requests
 def handle_request(data: bytes, vectorstore: Any) -> bytes:
     try:
         request_json = json.loads(data.decode())
         query = Query(**request_json)
-        
+
         user_query = query.encrypted_query  # plaintext for now
         response = vectorstore.similarity_search(user_query, k=1)[0]
 
@@ -78,6 +78,7 @@ def handle_request(data: bytes, vectorstore: Any) -> bytes:
         response_payload = {"error": str(e)}
 
     return json.dumps(response_payload).encode()
+
 
 # Main enclave server logic
 def enclave_server(vectorstore):
@@ -97,6 +98,7 @@ def enclave_server(vectorstore):
         response = handle_request(data, vectorstore)
         conn.sendall(response)
         conn.close()
+
 
 if __name__ == "__main__":
     faiss_arg = sys.argv[1] if len(sys.argv) > 1 else None

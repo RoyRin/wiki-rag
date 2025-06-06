@@ -10,8 +10,6 @@ import json
 import pickle
 
 
-
-
 def save_json(d, filepath):
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(d, f, ensure_ascii=False, indent=4)
@@ -221,7 +219,6 @@ def build_title_index(path_to_extracted_dir):
                         pass
                     offset = f.tell()
     return index
-
 
 
 def get_article_remote(title, abstract_only=False):
