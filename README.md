@@ -15,6 +15,9 @@ The RAG is generated using embeddings on each Wikipedia page *in its entirety*; 
 ## Quick Start:
 To run locally, you can run `python wiki_rag/rag_server_api.py`, and then can test it out by calling `rag_server_client.py`.
 
+You can see `notebooks/quick_start_notebook.ipynb` for a notebook version of this.
+
+
 ### Docker Build + Run
 Build image, for application
 ```
@@ -122,6 +125,10 @@ TEEs (Trusted Execution Environments) are hardware enabled execution environment
 
 See branch `rr/enclave-rag` for how to set up this RAG to run within an AWS nitro instance.
 
+
+# Code Notes:
+
+Some of the code is hardcoded for my (Roy) computer or work environment, like the slurm scripts for a cluster I have access to. I include this to make it easy for people to adapt for themselves, even if it's not immediately plug-and-play (you need to update the scripts for your own server architecture and file structure).
 
 # Contributing
 

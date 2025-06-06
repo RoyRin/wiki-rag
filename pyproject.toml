@@ -31,6 +31,9 @@ sentence-transformers = "^4.1.0"
 # transformers = { extras = ["torch"], version = "^4.47.1" }
 # requests = "^2.32.3"
 # wikiextractor = "^3.0.6"
+ipykernel = "^6.29.5"
+wikipedia = "^1.4.0"
+pandas = "^2.3.0"
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"

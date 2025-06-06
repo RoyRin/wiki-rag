@@ -7,5 +7,7 @@ DEFAULT_PATH="/Users/roy/data/wikipedia/hugging_face/faiss_index__top_100000__20
 
 # Use $1 if provided, otherwise fallback to DEFAULT_PATH
 HOST_PATH="${1:-$DEFAULT_PATH}"
+DOCKER_PATH="/home/ec2-user/data"
 
-docker run -p 8000:8000 -v "$HOST_PATH":/home/ec2-user/data "$IMAGE_NAME"
+
+docker run -p 8000:8000 -v "$HOST_PATH":$DOCKER_PATH "$IMAGE_NAME"
