@@ -17,6 +17,25 @@ To run locally, you can run `python wiki_rag/rag_server_api.py`, and then can te
 
 You can see `notebooks/quick_start_notebook.ipynb` for a notebook version of this.
 
+```
+    from pathlib import Path
+    from wiki_rag import rag
+
+    # Get RAG from HuggingFace
+    BAAI_embedding = rag.PromptedBGE(model_name="BAAI/bge-base-en") 
+    faiss_name = "wiki_index__top_100000__2025-04-11"
+    vectorstore = rag.download_and_build_rag_from_huggingface(
+        embeddings=BAAI_embedding,
+        rag_name=faiss_name,
+        save_dir=Path("wiki_rag_data"))
+
+    # Query RAG
+    responses = vectorstore.similarity_search("Biochemistry", k=3)
+    # Print Results
+    for i, result in enumerate(responses[:10]):
+        title = result.metadata["title"]
+        print(f"{i+1}. Wiki Page: '{title}'\n\t{result.page_content[:50]}...\n")
+```
 
 ### Docker Build + Run
 Build image, for application

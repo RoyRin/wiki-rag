@@ -8,11 +8,12 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from langchain.docstore.document import Document
 from langchain.embeddings.base import Embeddings
 import faiss
+from langchain_community.vectorstores import FAISS
+
 from itertools import islice
 from typing import Iterator
 from tqdm import tqdm
-
-from wiki_rag import wikipedia
+from huggingface_hub import snapshot_download
 
 
 def load_model(cache_dir=None):
@@ -68,9 +69,7 @@ def batched(iterable: Iterator, batch_size: int):
         yield batch
 
 
-import wikipedia
 from wiki_rag import wikipedia as rag_wikipedia
-from wiki_rag import rag
 
 from langchain.embeddings import HuggingFaceEmbeddings
 
@@ -171,4 +170,29 @@ def construct_faiss(
     else:
         print("⚠️ No documents were indexed.")
 
+    return vectorstore
+
+
+def download_and_build_rag_from_huggingface(
+        embeddings,
+        rag_name="wiki_index__top_100000__2025-04-11",
+        save_dir=None,
+        repo_id="royrin/wiki-rag"):
+
+    if save_dir is None:
+        save_dir = Path("wiki_rag_data")
+
+    # make dir
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    # download the specific folder
+    local_dir = snapshot_download(repo_id=repo_id,
+                                  repo_type="model",
+                                  allow_patterns=[f"{rag_name}/**"],
+                                  local_dir=f"./{save_dir}",
+                                  local_dir_use_symlinks=False)
+    faiss_path = Path(local_dir) / rag_name
+    vectorstore = FAISS.load_local(faiss_path,
+                                   embeddings,
+                                   allow_dangerous_deserialization=True)
     return vectorstore
