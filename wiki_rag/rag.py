@@ -174,7 +174,7 @@ def construct_faiss(
 
 
 def download_and_build_rag_from_huggingface(
-        embeddings,
+        embeddings=PromptedBGE(model_name="BAAI/bge-base-en"),
         rag_name="wiki_index__top_100000__2025-04-11",
         save_dir=None,
         repo_id="royrin/wiki-rag"):
