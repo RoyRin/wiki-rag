@@ -1,12 +1,14 @@
 # Wiki-RAG
 
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Dataset-yellow?style=for-the-badge)](https://huggingface.co/datasets/royrin/wiki-rag/tree/main) [![Licence](https://img.shields.io/badge/MIT_License-lightgreen?style=for-the-badge)](./LICENSE.md)
+
 Quick start to download entire Wikipedia and load it into a RAG for you. This RAG code gives you a RAG that directly gives you the relevant wikipedia article. It's entirely offline, so saves on requests to Wikipedia. Once a title is returned by the RAG, a request can be made to an offline store of Wikipedia, or to wikipedia directly.
 
-There are things like this, but somehow nothing quite like this. Other things require many HTTP requests to Wikipedia (like this https://llamahub.ai/l/readers/llama-index-readers-wikipedia?from=).
+There are things like this, but somehow nothing quite like this. Other things require many HTTP requests to Wikipedia (like [this](https://llamahub.ai/l/readers/llama-index-readers-wikipedia?from=)).
 
 Date of download of Wikipedia : April 10, 2025, from `https://dumps.wikimedia.org/other/pageviews/2024/2024-12/`.
 
-I've uploaded the wikipedia RAG to HuggingFace for public consumption, here: https://huggingface.co/royrin/wiki-rag/tree/main. 
+I've uploaded the wikipedia RAG to HuggingFace for public consumption, [here](https://huggingface.co/royrin/wiki-rag/tree/main). 
 
 
 ## Notes about embedding:
