@@ -14,7 +14,7 @@ I've uploaded the wikipedia RAG to HuggingFace for public consumption, [here](ht
 ## Notes about embedding:
 The RAG is generated using embeddings on each Wikipedia page *in its entirety*; I experimented with embedding smaller parts of hte page and anecodotally found that this returns poorer results. 
 
-## Quick Start:
+# Quick Start:
 To run locally, you can run `python wiki_rag/rag_server_api.py`, and then can test it out by calling `rag_server_client.py`.
 
 You can see `notebooks/quick_start_notebook.ipynb` for a notebook version of this.
@@ -39,21 +39,25 @@ You can see `notebooks/quick_start_notebook.ipynb` for a notebook version of thi
         print(f"{i+1}. Wiki Page: '{title}'\n\t{result.page_content[:50]}...\n")
 ```
 
-### Docker Build + Run
-Build image, for application
+# File Structure:
 ```
-    ./scripts/build.sh python # build docker image 
-    ./scripts/build.sh tee # build docker image specific for running in a TEE 
+wiki_rag
+├── __init__.py
+├── construct_faiss.py  - `Code to build FAISS from wikipedia (assumes local copy of wikipedia)`
+├── rag.py - `helper code to construct FAISS code`
+├── rag_server.py - `Give path to FAISS index, code to serve wikipedia entries 
+├── example_rag_client.py - `simple function to poll the rag_server, given that the server is running locally in a docker-container or on your machine`
+└── wikipedia.py - `helper code for interacting with a downloaded version of wikipedia`
 ```
 
-then to run the application
-```
-    ./scripts/run.sh # this just calls Docker run, with port 8000 open
-```
+
+# Misc:
+
+RAG servers by default return `page.content` that can take up a lot of space. I provide `remove_faiss_metadata.py` to remove this extra content, if you just want the title of the page returned.
 
 
 
-## High-level outline of how this repo was made:
+# High-level outline of how this repo was made:
 
 1. I downloaded Wikipedia into a cache (~22 GB, 2 hours to download). This takes time. I have done it locally, and extracted the first paragraph of each title into a new dataset, which is available here. 
 2. Processes the Wikidump into a JSON (using WikiExtract)
@@ -76,28 +80,6 @@ then to run the application
     * Note: Dockerfile assumes that FAISS is placed in `data` dir, in the same directory, prior to building. It builds the FAISS directory into the docker image (this could instead be mounted at runtime).
 
 
-## Helpful Links:
-1. Wikipedia downloads: `https://dumps.wikimedia.org/enwiki/latest/`
-2. Wikipedia page views: `https://dumps.wikimedia.org/other/pageviews/2024/2024-12/`
-3. What is AWS Nitro, and how does it work `https://www.youtube.com/watch?v=t-XmYt2z5S8&ab_channel=AmazonWebServices`.
-4. quick starting on AWS Nitro `https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html`.
-
-
-# File Structure:
-```
-wiki_rag
-├── __init__.py
-├── construct_faiss.py  - `Code to build FAISS from wikipedia (assumes local copy of wikipedia)`
-├── rag.py - `helper code to construct FAISS code`
-├── rag_server.py - `Give path to FAISS index, code to serve wikipedia entries 
-├── example_rag_client.py - `simple function to poll the rag_server, given that the server is running locally in a docker-container or on your machine`
-└── wikipedia.py - `helper code for interacting with a downloaded version of wikipedia`
-```
-
-
-# Misc:
-
-RAG servers by default return `page.content` that can take up a lot of space. I provide `remove_faiss_metadata.py` to remove this extra content, if you just want the title of the page returned.
 
 
 
@@ -128,8 +110,6 @@ done
 
 ```
 
-# Docker and Images
-`Dockerfiles/Dockerfile.app` stores the dockerfile for the uvicorn API based RAG server
 
 
 # Contextualizing Scores and numbers!
@@ -145,6 +125,28 @@ And here's an annotated version for responses associated with "Synthetic Biology
 TEEs (Trusted Execution Environments) are hardware enabled execution environments for running software. AWS provides tooling to run your own TEEs through a system called **AWS Nitro**.
 
 See branch `rr/enclave-rag` for how to set up this RAG to run within an AWS nitro instance.
+
+
+
+# Docker Build + Run
+Build image, for application
+```
+    ./scripts/build.sh python # build docker image 
+    ./scripts/build.sh tee # build docker image specific for running in a TEE 
+```
+
+then to run the application
+```
+    ./scripts/run.sh # this just calls Docker run, with port 8000 open
+```
+`Dockerfiles/Dockerfile.app` stores the dockerfile for the uvicorn API based RAG server
+
+
+# Helpful Links:
+1. Wikipedia downloads: `https://dumps.wikimedia.org/enwiki/latest/`
+2. Wikipedia page views: `https://dumps.wikimedia.org/other/pageviews/2024/2024-12/`
+3. What is AWS Nitro, and how does it work `https://www.youtube.com/watch?v=t-XmYt2z5S8&ab_channel=AmazonWebServices`.
+4. quick starting on AWS Nitro `https://docs.aws.amazon.com/enclaves/latest/user/getting-started.html`.
 
 
 # Code Notes:
