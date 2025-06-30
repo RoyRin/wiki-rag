@@ -71,7 +71,7 @@ def batched(iterable: Iterator, batch_size: int):
 
 from wiki_rag import wikipedia as rag_wikipedia
 
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
 
 class PromptedBGE(HuggingFaceEmbeddings):

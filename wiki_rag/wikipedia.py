@@ -41,6 +41,7 @@ def get_title_to_path_index(json_dir, title_to_file_path_f_pkl):
         title_to_file_path
     """
     jsons_ = list(json_dir.glob('**/wiki_*'))
+    title_to_file_path = {}
 
     if title_to_file_path_f_pkl.exists():
         with open(title_to_file_path_f_pkl, 'rb') as f:
@@ -150,7 +151,7 @@ def extract_abstract_from_text(text):
         paragraph = paragraph.strip()
         if paragraph:
             return paragraph
-    return None
+    return ""
 
 
 def read_article_from_json(full_path, offset):

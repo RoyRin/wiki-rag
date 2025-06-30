@@ -20,7 +20,7 @@ do_encryption = False
 
 # 🧠 Load tokenizer + model
 from langchain_community.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
 
 class PromptedBGE(HuggingFaceEmbeddings):
