@@ -7,3 +7,4 @@ venv39
 data
 __pycache__
 assets
+wiki_rag.egg-info/
