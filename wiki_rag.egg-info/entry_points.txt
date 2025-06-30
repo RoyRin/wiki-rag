@@ -1,0 +1,2 @@
+[console_scripts]
+rag-server = wiki_rag.rag_server:main

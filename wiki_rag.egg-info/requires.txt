@@ -1,0 +1,11 @@
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+cryptography>=42.0.5
+faiss-cpu>=1.7.4
+langchain-community>=0.3.23
+sentence-transformers>=4.1.0
+wikipedia>=1.4.0
+pandas>=2.3.0
+
+[dev]
+ipykernel>=6.29.5
