@@ -68,6 +68,7 @@ RAG servers by default return `page.content` that can take up a lot of space. I 
 ## Do it for yourself, from Scratch
 1. Download Wikipedia full (~22 GB, 2 hours to download over Wget, ~30 min using Aria2c)
     * `aria2c -x 16 -s 16 https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2`
+    * `bunzip2 enwiki-latest-pages-articles.xml.bz2`
 2. Extract Wikipedia into machine-readable code (JSON):
     * `python3 WikiExtractor.py ../enwiki-latest-pages-articles.xml.bz2 -o extracted --json`
     * `extract_wiki.slrm` does this in a slrm script (note - there are some hard-coded values)
