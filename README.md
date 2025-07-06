@@ -72,12 +72,16 @@ RAG servers by default return `page.content` that can take up a lot of space. I 
 2. Extract Wikipedia into machine-readable code (JSON):
     * `python3 WikiExtractor.py ../enwiki-latest-pages-articles.xml.bz2 -o extracted --json`
     * `extract_wiki.slrm` does this in a slrm script (note - there are some hard-coded values)
-3. Get list of top 100k or 1M articles, by page-views from
+3. Build title index for fast article lookup:
+    * After extracting Wikipedia to JSON format, build an index mapping article titles to their file locations
+    * Run: `python3 scripts/rebuild_wiki_index.py /path/to/wikipedia/json`
+    * This creates a `title_to_file_path_idx.pkl` file in your Wikipedia JSON directory for fast article retrieval
+4. Get list of top 100k or 1M articles, by page-views from
     `https://dumps.wikimedia.org/other/pageviews/2024/2024-12/`
-4. load pages into RAG
+5. load pages into RAG
     * Look to `wiki_rag/construct_faiss.py`, for assistance here (this calls `wiki_rag/wikipedia.py` and `wiki_rag/rag.py`)
     * `construct_faiss.slrm` does this in a slrm script (note - there are some hard-coded values)
-5. Build a dockerfile that builds docker image with the FAISS RAG built into it, and serves a simple API.
+6. Build a dockerfile that builds docker image with the FAISS RAG built into it, and serves a simple API.
     * Note: Dockerfile assumes that FAISS is placed in `data` dir, in the same directory, prior to building. It builds the FAISS directory into the docker image (this could instead be mounted at runtime).
 
 
