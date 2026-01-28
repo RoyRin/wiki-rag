@@ -7,7 +7,7 @@
 #SBATCH -t 0-72:00
 #SBATCH -c 1
 #SBATCH --output=/n/home04/rrinberg/catered_out/data_unlearning/construct-faiss-%A__%a.out
-#SBATCH --mail-user=royrinberg@gmail.com  
+#SBATCH --mail-user=anonymous@example.com
 #SBATCH --mail-type=ALL
 #SBATCH --account kempner_emalach_lab
 

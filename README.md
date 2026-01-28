@@ -1,6 +1,6 @@
 # Wiki-RAG
 
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow?style=for-the-badge)](https://huggingface.co/royrin/wiki-rag/tree/main) [![Licence](https://img.shields.io/badge/MIT_License-lightgreen?style=for-the-badge)](./LICENSE)
+[![Licence](https://img.shields.io/badge/MIT_License-lightgreen?style=for-the-badge)](./LICENSE)
 
 Quick start to download entire Wikipedia and load it into a RAG for you. This RAG code gives you a RAG that directly gives you the relevant wikipedia article. It's entirely offline, so saves on requests to Wikipedia. Once a title is returned by the RAG, a request can be made to an offline store of Wikipedia, or to wikipedia directly.
 
@@ -8,7 +8,7 @@ There are things like this, but somehow nothing quite like this. Other things re
 
 Date of download of Wikipedia : April 10, 2025, from `https://dumps.wikimedia.org/other/pageviews/2024/2024-12/`.
 
-I've uploaded the wikipedia RAG to HuggingFace for public consumption, [here](https://huggingface.co/royrin/wiki-rag/tree/main). 
+The wikipedia RAG is available on HuggingFace for public consumption. 
 
 
 ## Notes about embedding:
@@ -89,11 +89,10 @@ RAG servers by default return `page.content` that can take up a lot of space. I 
 
 
 # Quick Download of wiki-rag RAG:
-(from `https://huggingface.co/datasets/royrin/KLOM-models/tree/main`)
 ```
 #!/bin/bash
 
-REPO="royrin/wiki-rag"
+REPO="YOUR_USERNAME/wiki-rag"
 FOLDER="faiss_index__top_100000__2025-04-11__title_only"
 
 # Get list of all files in the repo
@@ -156,7 +155,7 @@ then to run the application
 
 # Code Notes:
 
-Some of the code is hardcoded for my (Roy) computer or work environment, like the slurm scripts for a cluster I have access to. I include this to make it easy for people to adapt for themselves, even if it's not immediately plug-and-play (you need to update the scripts for your own server architecture and file structure).
+Some of the code is hardcoded for the author's computer or work environment, like the slurm scripts for a cluster. I include this to make it easy for people to adapt for themselves, even if it's not immediately plug-and-play (you need to update the scripts for your own server architecture and file structure).
 
 # Contributing
 

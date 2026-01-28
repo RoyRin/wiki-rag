@@ -42,7 +42,7 @@ BAAI_embedding = PromptedBGE(model_name="BAAI/bge-base-en")  # or bge-large-en
 # You'd load your document embeddings here
 
 ### LOAD RAG
-FAISS_PATH = Path("/Users/roy/data/wikipedia/hugging_face/")
+FAISS_PATH = Path("/path/to/data/wikipedia/hugging_face/")
 FAISS_PATH = FAISS_PATH / "faiss_index__top_100000__2025-04-11"
 FAISS_PATH = os.environ.get("FAISS_PATH", FAISS_PATH)
 print(f"FAISS_PATH {FAISS_PATH}")
@@ -53,7 +53,7 @@ def load_vectorstore(faiss_path: Optional[str] = FAISS_PATH):
     """ adjusts global vectorstore variable """
     global vectorstore
     if faiss_path is None:
-        default_FAISS_PATH = Path("/Users/roy/data/wikipedia/hugging_face")
+        default_FAISS_PATH = Path("/path/to/data/wikipedia/hugging_face")
         default_FAISS_PATH = default_FAISS_PATH / "wiki_index__top_100000__2025-04-11"
         faiss_path = default_FAISS_PATH
 
